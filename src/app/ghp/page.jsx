@@ -54,16 +54,6 @@ export default function GHPPage() {
 
       <div className={styles.page}>
         <div className="container">
-          <section className={styles.reminders}>
-            <h2>Important Reminders</h2>
-            <ul>
-              <li>Watch the entire orientation video before taking the exam.</li>
-              <li>Ensure a stable internet connection while taking the online exam.</li>
-              <li>There is no limit to the number of retakes if you do not pass.</li>
-              <li>The Certificate of Completion is required for MTV registration at the NMIS office.</li>
-            </ul>
-          </section>
-
           <section className={styles.intro}>
             <div>
               <h2>Good Hygienic Practices (GHP) Virtual Orientation</h2>
@@ -77,6 +67,16 @@ export default function GHPPage() {
                 An online examination is administered after the orientation. Participants who obtain a passing score of at least 70% shall be issued a Certificate of Attendance. Retakes are allowed when the passing score is not met.
               </p>
             </div>
+          </section>
+
+          <section className={styles.reminders}>
+            <h2>Important Reminders</h2>
+            <ul>
+              <li>Watch the entire orientation video before taking the exam.</li>
+              <li>Ensure a stable internet connection while taking the online exam.</li>
+              <li>There is no limit to the number of retakes if you do not pass.</li>
+              <li>The Certificate of Completion is required for MTV registration at the NMIS office.</li>
+            </ul>
           </section>
 
           <StepsBar currentStep={currentStep} />

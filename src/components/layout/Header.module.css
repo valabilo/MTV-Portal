@@ -1,7 +1,7 @@
 /* components/layout/Header.module.css */
 
 .header {
-  background: var(--green-deep);
+  background: #006b3f;
   box-shadow: var(--shadow-md);
   position: sticky;
   top: 0;

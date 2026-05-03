@@ -100,7 +100,8 @@ export default function CertCard({
               <strong>{email}</strong>.
             </p>
             <p style={{ fontSize: ".85rem", color: "var(--gray-500)" }}>
-              Please check your inbox and spam folder once the certificate is processed.
+              Please check your inbox and spam folder once the certificate is
+              processed.
             </p>
 
             {/* Certificate details */}
@@ -193,23 +194,84 @@ export default function CertCard({
 
             {/* Live certificate preview */}
             <div className={styles.certPreview}>
-              <div className={styles.certPreviewHeader}>
-                📜 Certificate Preview
-              </div>
+              <div className={styles.ribbonTop} />
               <div className={styles.certPreviewBody}>
-                <p>This is to certify that</p>
-                <strong className={styles.certName}>
-                  {name.trim() || "[ Your Name Here ]"}
-                </strong>
-                <p>
-                  has successfully completed the online orientation seminar on
-                  Good Hygiene Practices (GHP) for Meat Transport Vehicles.
-                </p>
-                <p className={styles.certMeta}>
-                  Issued by NMIS Central Luzon &nbsp;·&nbsp;{" "}
-                  {new Date().getFullYear()}
-                </p>
+                <div className={styles.certAgency}>
+                  <img src="/nmis-logo.svg" alt="" />
+                  <div>
+                    <p>Republic of the Philippines</p>
+                    <p>Department of Agriculture</p>
+                    <strong>National Meat Inspection Service</strong>
+                    <p>Region III, Regional Government Center</p>
+                    <p>Maimpis, San Fernando, Pampanga 2000</p>
+                    <p>Telefax No. (045) 4554532</p>
+                  </div>
+                </div>
+
+                <h4>Certificate of Completion</h4>
+                <p className={styles.givenText}>is hereby given to</p>
+
+                <div className={styles.certMain}>
+                  <div className={styles.certCopy}>
+                    <strong className={styles.certName}>
+                      {name.trim() || "Your Name Here"}
+                    </strong>
+                    <p>
+                      for having satisfactorily participated in the
+                      <br />
+                      <b>
+                        MTV Drivers and Pahinante Good Hygienic Practices (GHP)
+                        Orientation
+                      </b>
+                      <br />
+                      on{" "}
+                      <b>
+                        {new Date().toLocaleDateString("en-PH", {
+                          year: "numeric",
+                          month: "long",
+                          day: "2-digit",
+                        })}
+                      </b>{" "}
+                      via Virtual Orientation.
+                    </p>
+
+                    <p className={styles.validityText}>
+                      This is a pre-requisite requirement for MTV Registration
+                      Application and shall be valid until{" "}
+                      <b>
+                        {new Date(
+                          new Date().setFullYear(new Date().getFullYear() + 1),
+                        ).toLocaleDateString("en-PH", {
+                          year: "numeric",
+                          month: "long",
+                          day: "2-digit",
+                        })}
+                      </b>
+                    </p>
+                  </div>
+
+                  <div className={styles.qrBlock}>
+                    <div className={styles.qrMock}>QR Code</div>
+                    <p>Scan to Verify</p>
+                  </div>
+                </div>
+
+                <div className={styles.certFooter}>
+                  <div className={styles.signatureBlock}>
+                    <strong>MA. THERESA D. MAGDARAOOG, DVM, MPMRD</strong>
+                    <p>
+                      Supervising Meat Control Officer, Designated Admin Officer
+                    </p>
+                  </div>
+
+                  <div className={styles.controlBlock}>
+                    <strong>GHP-{new Date().getFullYear()}-1001</strong>
+                    <p>"Safe Meat For All"</p>
+                    <span>NMIS is ISO 9001:2015 Certified</span>
+                  </div>
+                </div>
               </div>
+              <div className={styles.ribbonBottom} />
             </div>
 
             {/* Send button */}

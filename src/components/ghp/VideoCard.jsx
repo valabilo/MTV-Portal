@@ -88,7 +88,6 @@ export default function VideoCard({ watched, onMarkWatched }) {
   return (
     <div className={styles.card}>
       <div className={styles.header}>
-        <div className={styles.headerIcon}>Play</div>
         <div className={styles.headerText}>
           <h3>Step 1 - Watch GHP Orientation Video</h3>
           <p>Required before you can take the qualification quiz</p>
