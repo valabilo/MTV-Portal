@@ -20,7 +20,7 @@
   font-size: 1.4rem; flex-shrink: 0;
 }
 .headerText h3 {
-  font-family: "Barlow Condensed", sans-serif;
+  font-family: "Public Sans", sans-serif;
   font-size: 1.35rem; font-weight: 800; color: var(--white);
 }
 .headerText p { font-size: .85rem; color: rgba(255,255,255,.75); margin-top: 2px; }
@@ -53,7 +53,7 @@
   padding: 10px 14px;
   border: 1.5px solid var(--gray-200);
   border-radius: 8px;
-  font-family: "Nunito", sans-serif;
+  font-family: "Public Sans", sans-serif;
   font-size: .92rem;
   color: var(--gray-900);
   transition: var(--transition);
@@ -106,7 +106,7 @@
 }
 .successIcon { font-size: 3.5rem; margin-bottom: 12px; }
 .successBox h4 {
-  font-family: "Barlow Condensed", sans-serif;
+  font-family: "Public Sans", sans-serif;
   font-size: 1.6rem; font-weight: 800; color: var(--green);
   margin-bottom: 8px;
 }

@@ -13,7 +13,7 @@
 .icon { font-size: 4rem; margin-bottom: 16px; }
 
 .card h2 {
-  font-family: "Barlow Condensed", sans-serif;
+  font-family: "Public Sans", sans-serif;
   font-size: 1.8rem;
   font-weight: 800;
   color: var(--green);
@@ -36,7 +36,7 @@
 }
 .refBox p    { font-size: .85rem; color: var(--gray-500); margin-bottom: 4px; }
 .refBox span {
-  font-family: "Barlow Condensed", sans-serif;
+  font-family: "Public Sans", sans-serif;
   font-size: 1.6rem;
   font-weight: 800;
   color: var(--green);

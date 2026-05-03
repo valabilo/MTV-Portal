@@ -63,8 +63,14 @@ export async function POST(request) {
     await saveApplication(applicationData);
 
     // Send confirmation email
+    let emailSent = false;
     try {
-      await sendApplicationConfirmation(body.email, refNumber, body.firstname);
+      await sendApplicationConfirmation(
+        body.email,
+        refNumber,
+        `${body.firstname} ${body.lastname}`.trim(),
+      );
+      emailSent = true;
     } catch (emailError) {
       console.error("Email send failed:", emailError);
       // Don't fail the application if email fails
@@ -75,6 +81,7 @@ export async function POST(request) {
         success: true,
         message: "Application submitted successfully",
         refNumber,
+        emailSent,
       },
       { status: 201 },
     );

@@ -5,7 +5,7 @@
   padding: 36px 0 28px;
 }
 .hero h1 {
-  font-family: "Barlow Condensed", sans-serif;
+  font-family: "Public Sans", sans-serif;
   font-size: 2rem; font-weight: 800; color: var(--white);
 }
 .hero p { color: rgba(255,255,255,.8); font-size: .93rem; margin-top: 4px; }

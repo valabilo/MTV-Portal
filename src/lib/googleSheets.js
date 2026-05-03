@@ -48,7 +48,7 @@ export async function readSheet(sheetName) {
   if (!rows || rows.length < 2) return [];
 
   const headers = rows[0].map((header) =>
-    String(header).toLowerCase().replace(/ /g, "_"),
+    String(header).trim().toLowerCase().replace(/\s+/g, "_"),
   );
 
   return rows.slice(1).map((row) => {

@@ -1,11 +1,6 @@
 "use client";
 /**
  * components/ghp/QuizCard.jsx
- *
- * Props:
- *   unlocked   {boolean}        Whether the quiz is unlocked (video watched)
- *   onPass     {(score)=>void}  Called with the number of correct answers when user passes
- *   showToast  {Function}
  */
 
 import { useState, useCallback, useEffect } from "react";
@@ -21,30 +16,22 @@ export default function QuizCard({ unlocked, onPass, showToast }) {
 
   const selectAnswer = useCallback(
     (qi, oi) => {
-      if (submitted) return;
-      setAnswers((prev) => ({ ...prev, [qi]: oi }));
+      if (!submitted) setAnswers((prev) => ({ ...prev, [qi]: oi }));
     },
     [submitted],
   );
 
-  // Load quiz data from API
   useEffect(() => {
-    async function loadQuizData() {
-      try {
-        const response = await fetch("/api/quiz");
-        const data = await response.json();
-        setQuizData(data);
-      } catch (err) {
-        console.error("Failed to load quiz data:", err);
-        setError("Failed to load quiz questions. Please refresh the page.");
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadQuizData();
+    fetch("/api/quiz")
+      .then((r) => r.json())
+      .then((data) => setQuizData(data))
+      .catch(() =>
+        setError("Failed to load quiz questions. Please refresh the page."),
+      )
+      .finally(() => setLoading(false));
   }, []);
 
-  if (loading) {
+  if (loading)
     return (
       <div className={styles.card}>
         <div className={styles.header}>
@@ -61,9 +48,8 @@ export default function QuizCard({ unlocked, onPass, showToast }) {
         </div>
       </div>
     );
-  }
 
-  if (error) {
+  if (error || !quizData?.questions || !quizData?.config)
     return (
       <div className={styles.card}>
         <div className={styles.header}>
@@ -75,37 +61,16 @@ export default function QuizCard({ unlocked, onPass, showToast }) {
         </div>
         <div className={styles.body}>
           <div style={{ textAlign: "center", padding: "2rem", color: "red" }}>
-            {error}
+            {error ||
+              "The quiz data could not be loaded. Please refresh the page."}
           </div>
         </div>
       </div>
     );
-  }
-
-  if (!quizData || !quizData.questions || !quizData.config) {
-    return (
-      <div className={styles.card}>
-        <div className={styles.header}>
-          <div className={styles.headerIcon}>⚠️</div>
-          <div className={styles.headerText}>
-            <h3>Step 2 – Take the GHP Qualification Quiz</h3>
-            <p>Quiz data unavailable</p>
-          </div>
-        </div>
-        <div className={styles.body}>
-          <div style={{ textAlign: "center", padding: "2rem", color: "red" }}>
-            The quiz data could not be loaded. Please refresh the page.
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   const { questions, config } = quizData;
   const passThreshold = config?.passThreshold ?? 0.7;
-  const totalQuestions = Number.isInteger(config?.totalQuestions)
-    ? config.totalQuestions
-    : questions?.length || 0;
+  const totalQuestions = config?.totalQuestions ?? questions.length;
   const answered = Object.keys(answers).length;
   const progress = totalQuestions > 0 ? (answered / totalQuestions) * 100 : 0;
 
@@ -125,7 +90,7 @@ export default function QuizCard({ unlocked, onPass, showToast }) {
     const passed = pct >= passThreshold;
     setScore({ correct, pct: Math.round(pct * 100), passed });
     setSubmitted(true);
-    if (passed) onPass(correct);
+    if (passed) onPass(correct, totalQuestions); // ← pass total back
   }
 
   function handleRetake() {
@@ -136,12 +101,14 @@ export default function QuizCard({ unlocked, onPass, showToast }) {
 
   return (
     <div className={styles.card}>
-      {/* Header */}
       <div className={styles.header}>
         <div className={styles.headerIcon}>📝</div>
         <div className={styles.headerText}>
           <h3>Step 2 – Take the GHP Qualification Quiz</h3>
-          <p>Score at least 70% to qualify for your certificate</p>
+          <p>
+            Score at least {Math.round(passThreshold * 100)}% to qualify for
+            your certificate
+          </p>
         </div>
         <span
           className={`tag ${unlocked ? (score?.passed ? "tag-active" : "tag-pending") : "tag-locked"}`}

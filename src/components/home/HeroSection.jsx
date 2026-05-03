@@ -17,7 +17,7 @@ export default function HeroSection() {
             application and track your status online.
           </p>
           <div className={styles.actions}>
-            <a href="/apply"  className="btn btn-white">📋 SUBMIT APPLICATION</a>
+            <a href="/apply"  className="btn btn-white">📋 MTV APPLICATION</a>
             <a href="/verify" className={styles.btnOutlineWhite}>🔍 VERIFY MTV</a>
           </div>
         </div>

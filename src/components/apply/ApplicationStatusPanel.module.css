@@ -1,28 +1,43 @@
-.page {
-  padding: 40px 0 60px;
+.section {
+  margin-top: 44px;
+}
+
+.header {
+  margin: 0 auto 18px;
+  max-width: 760px;
+  text-align: center;
+}
+
+.header span {
+  color: var(--gold);
+  display: block;
+  font-size: .76rem;
+  font-weight: 800;
+  letter-spacing: .8px;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.header h2 {
+  color: var(--green);
+  font-family: "Public Sans", sans-serif;
+  font-size: 1.5rem;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.header p {
+  color: var(--gray-500);
+  font-size: .92rem;
 }
 
 .searchCard {
   background: var(--white);
   border-radius: var(--radius);
   box-shadow: var(--shadow-md);
-  padding: 32px;
+  margin: 0 auto 22px;
   max-width: 680px;
-  margin: 0 auto 28px;
-}
-
-.searchCard h2 {
-  font-family: "Public Sans", sans-serif;
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: var(--green);
-  margin-bottom: 6px;
-}
-
-.searchCard p {
-  color: var(--gray-500);
-  font-size: .9rem;
-  margin-bottom: 20px;
+  padding: 24px;
 }
 
 .searchRow {
@@ -32,6 +47,8 @@
 
 .searchRow input {
   flex: 1;
+  letter-spacing: .4px;
+  text-transform: uppercase;
 }
 
 .message {
@@ -39,8 +56,8 @@
   border: 1px solid rgba(192, 57, 43, .2);
   border-radius: 8px;
   color: #991b1b;
+  margin: 0 auto 22px;
   max-width: 680px;
-  margin: 0 auto 28px;
   padding: 16px;
 }
 
@@ -50,28 +67,28 @@
 }
 
 .message p {
-  margin: 0;
   font-size: .9rem;
+  margin: 0;
 }
 
 .resultCard {
   background: var(--white);
   border-radius: var(--radius);
   box-shadow: var(--shadow-md);
-  max-width: 840px;
   margin: 0 auto;
+  max-width: 840px;
   overflow: hidden;
 }
 
 .resultHeader {
+  align-items: center;
   background: var(--green);
   color: var(--white);
-  padding: 22px 28px;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
   flex-wrap: wrap;
+  gap: 16px;
+  justify-content: space-between;
+  padding: 22px 28px;
 }
 
 .resultHeader span {
@@ -84,9 +101,9 @@
   text-transform: uppercase;
 }
 
-.resultHeader h2 {
+.resultHeader h3 {
   font-family: "Public Sans", sans-serif;
-  font-size: 1.7rem;
+  font-size: 1.45rem;
   font-weight: 800;
 }
 
@@ -96,8 +113,8 @@
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
   gap: 18px;
+  grid-template-columns: repeat(2, 1fr);
 }
 
 .detail {
@@ -106,10 +123,10 @@
 }
 
 .detail label {
+  color: var(--gray-500);
   display: block;
   font-size: .78rem;
   font-weight: 800;
-  color: var(--gray-500);
   letter-spacing: .5px;
   margin-bottom: 4px;
   text-transform: uppercase;

@@ -18,6 +18,10 @@ import { formatBytes } from '@/lib/utils'
 import styles from './FormSteps.module.css'
 import docStyles from './Step3Documents.module.css'
 
+function getDocName(doc) {
+  return doc.label || doc.name || ''
+}
+
 export default function Step3Documents({ files, setFiles, agree, setAgree, onBack, onNext, showToast }) {
 
   function addFile(docId, file) {
@@ -55,7 +59,7 @@ export default function Step3Documents({ files, setFiles, agree, setAgree, onBac
         {REQUIRED_DOCS.map(doc => (
           <div key={doc.id} className={docStyles.docItem}>
             <label className={docStyles.docLabel}>
-              {doc.label} <span className="req">*</span>
+              {getDocName(doc)} <span className="req">*</span>
             </label>
 
             {/* Drop zone */}
@@ -68,7 +72,7 @@ export default function Step3Documents({ files, setFiles, agree, setAgree, onBac
                 onDrop={e => { e.currentTarget.classList.remove(docStyles.dragOver); handleDrop(e, doc.id) }}
                 role="button"
                 tabIndex={0}
-                aria-label={`Upload ${doc.label}`}
+                aria-label={`Upload ${getDocName(doc)}`}
                 onKeyDown={e => e.key === 'Enter' && document.getElementById(`file_${doc.id}`).click()}
               >
                 <span className={docStyles.dropIcon}>📎</span>
@@ -81,7 +85,7 @@ export default function Step3Documents({ files, setFiles, agree, setAgree, onBac
                 <button
                   type="button"
                   onClick={() => removeFile(doc.id)}
-                  aria-label={`Remove ${doc.label}`}
+                  aria-label={`Remove ${getDocName(doc)}`}
                   className={docStyles.removeBtn}
                 >✕</button>
               </div>

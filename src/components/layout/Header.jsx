@@ -27,7 +27,9 @@ export default function Header() {
         <div className={styles.headerTop}>
           {/* Branding */}
           <a href="/" className={styles.brand}>
-            <div className={styles.logo}>🇵🇭</div>
+            <span className={styles.logo}>
+              <img src="/nmis-logo.svg" alt="NMIS logo" />
+            </span>
             <div className={styles.brandText}>
               <span className={styles.republic}>Republic of the Philippines</span>
               <span className={styles.agency}>{AGENCY_NAME}</span>

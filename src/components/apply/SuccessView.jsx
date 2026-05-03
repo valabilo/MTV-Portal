@@ -31,7 +31,7 @@ export default function SuccessView({ refNumber, onReset }) {
       </p>
 
       <div className={styles.actions}>
-        <a href={`/application-status?ref=${encodeURIComponent(refNumber)}`} className="btn btn-primary">Track Status</a>
+        <a href={`/apply?ref=${encodeURIComponent(refNumber)}#application-status`} className="btn btn-primary">Track Status</a>
         <button className="btn btn-outline" onClick={onReset}>Submit Another</button>
       </div>
     </div>

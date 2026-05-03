@@ -6,6 +6,8 @@
 import { NextResponse } from "next/server";
 import { getBannedList } from "@/lib/googleSheets";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const bannedList = await getBannedList();

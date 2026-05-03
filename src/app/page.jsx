@@ -5,14 +5,14 @@
  * All interactive child components declare 'use client' themselves.
  */
 
-import HeroSection from '@/components/home/HeroSection'
+import HeroSection from "@/components/home/HeroSection";
 import {
   QuickActions,
   ProcessSteps,
   CTAStrip,
   InfoCards,
   ContactBar,
-} from '@/components/home/HomeComponents'
+} from "@/components/home/HomeComponents";
 
 export default function HomePage() {
   return (
@@ -24,5 +24,5 @@ export default function HomePage() {
       <InfoCards />
       <ContactBar />
     </>
-  )
+  );
 }

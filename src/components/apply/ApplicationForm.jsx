@@ -107,6 +107,9 @@ export default function ApplicationForm() {
       })
       const json = await res.json()
       if (!json.success) throw new Error(json.error)
+      if (!json.emailSent) {
+        showToast('Application submitted, but the confirmation email could not be sent. Please keep your reference number.', true)
+      }
       setRefNumber(json.refNumber)
       setSubmitted(true)
     } catch (err) {

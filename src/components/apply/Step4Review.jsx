@@ -7,6 +7,10 @@ import { REQUIRED_DOCS } from '@/data/requiredDocs'
 import styles  from './FormSteps.module.css'
 import rStyles from './Step4Review.module.css'
 
+function getDocName(doc) {
+  return (doc.label || doc.name || '').split('(')[0].trim()
+}
+
 function ReviewRow({ label, value }) {
   return (
     <div className={rStyles.row}>
@@ -52,14 +56,18 @@ export default function Step4Review({ data, files, submitting, onBack, onSubmit 
       <div className={rStyles.docsBlock}>
         <h3 className={rStyles.blockTitle}>📂 Documents</h3>
         <div className={rStyles.docTags}>
-          {REQUIRED_DOCS.map(doc => (
-            <span
-              key={doc.id}
-              className={`tag ${files[doc.id] ? 'tag-active' : 'tag-pending'}`}
-            >
-              {files[doc.id] ? '✅' : '⏳'} {doc.label.split('(')[0].trim()}
-            </span>
-          ))}
+          {REQUIRED_DOCS.map(doc => {
+            const docName = getDocName(doc)
+
+            return (
+              <span
+                key={doc.id}
+                className={`tag ${files[doc.id] ? 'tag-active' : 'tag-pending'}`}
+              >
+                {files[doc.id] ? '✅' : '⏳'} {docName}
+              </span>
+            )
+          })}
         </div>
         <p style={{ fontSize: '.82rem', color: 'var(--gray-500)', marginTop: 10 }}>
           📁 All attached documents will be saved to the NMIS Google Drive folder.

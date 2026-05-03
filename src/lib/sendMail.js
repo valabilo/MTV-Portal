@@ -10,18 +10,22 @@ let transporter = null;
 function getTransporter() {
   if (transporter) return transporter;
 
-  const user = process.env.EMAIL_USER;
-  const pass = process.env.EMAIL_PASS;
+  const user = process.env.GMAIL_USER || process.env.EMAIL_USER;
+  const pass = process.env.GMAIL_APP_PASSWORD || process.env.EMAIL_PASS;
+  const fromName = process.env.GMAIL_FROM_NAME || "MTV Portal";
 
   if (!user || !pass) {
     throw new Error(
-      "Missing EMAIL_USER or EMAIL_PASS in environment variables.",
+      "Missing Gmail credentials. Set GMAIL_USER and GMAIL_APP_PASSWORD in environment variables.",
     );
   }
 
   transporter = nodemailer.createTransport({
     service: "gmail",
     auth: { user, pass },
+    defaults: {
+      from: `"${fromName}" <${user}>`,
+    },
   });
 
   return transporter;
@@ -35,7 +39,6 @@ export async function sendApplicationConfirmation(
   const transport = getTransporter();
 
   return transport.sendMail({
-    from: process.env.EMAIL_USER,
     to: email,
     subject: `MTV Application Confirmation - ${refNumber}`,
     html: `
@@ -55,7 +58,6 @@ export async function sendGHPCompletion(email, name, certNumber, score) {
   const transport = getTransporter();
 
   return transport.sendMail({
-    from: process.env.EMAIL_USER,
     to: email,
     subject: `GHP Certificate - ${certNumber}`,
     html: `
@@ -75,7 +77,6 @@ export async function sendVerificationResult(email, name, plate, status) {
   const transport = getTransporter();
 
   return transport.sendMail({
-    from: process.env.EMAIL_USER,
     to: email,
     subject: `Vehicle Verification Result - ${plate}`,
     html: `
@@ -95,7 +96,6 @@ export async function sendContactReply(email, subject, message) {
   const transport = getTransporter();
 
   return transport.sendMail({
-    from: process.env.EMAIL_USER,
     to: email,
     subject: `Re: ${subject}`,
     html: `

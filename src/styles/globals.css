@@ -44,7 +44,7 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
 body {
-  font-family: "Nunito", sans-serif;
+  font-family: "Public Sans", sans-serif;
   background: var(--gray-50);
   color: var(--gray-900);
   min-height: 100vh;
@@ -60,7 +60,7 @@ p { line-height: 1.7; }
 a { color: inherit; }
 
 .display {
-  font-family: "Barlow Condensed", sans-serif;
+  font-family: "Public Sans", sans-serif;
   font-weight: 800;
   letter-spacing: .5px;
 }
@@ -77,7 +77,7 @@ a { color: inherit; }
 .hidden { display: none !important; }
 
 .section-title {
-  font-family: "Barlow Condensed", sans-serif;
+  font-family: "Public Sans", sans-serif;
   font-size: 1.9rem;
   font-weight: 800;
   color: var(--green);
@@ -110,7 +110,7 @@ a { color: inherit; }
   gap: 8px;
   padding: 10px 22px;
   border-radius: var(--radius);
-  font-family: "Nunito", sans-serif;
+  font-family: "Public Sans", sans-serif;
   font-weight: 700;
   font-size: .93rem;
   cursor: pointer;
@@ -179,7 +179,7 @@ textarea {
   padding: 10px 14px;
   border: 1.5px solid var(--gray-200);
   border-radius: 8px;
-  font-family: "Nunito", sans-serif;
+  font-family: "Public Sans", sans-serif;
   font-size: .92rem;
   color: var(--gray-900);
   background: var(--white);
@@ -241,7 +241,7 @@ tbody td { padding: 12px 16px; color: var(--gray-700); }
   padding: 36px 0 28px;
 }
 .page-hero h1 {
-  font-family: "Barlow Condensed", sans-serif;
+  font-family: "Public Sans", sans-serif;
   font-size: 2rem; font-weight: 800; color: var(--white);
 }
 .page-hero p { color: rgba(255,255,255,.8); font-size: .93rem; margin-top: 4px; }

@@ -3,7 +3,7 @@
  */
 export function QuickActions() {
   const actions = [
-    { icon: '📝', title: 'Apply for MTV',   desc: 'Submit your application and complete requirements online.',     href: '/apply',  cta: 'APPLY NOW'  },
+    { icon: '📝', title: 'MTV Application', desc: 'Submit your application or check an existing application status.', href: '/apply',  cta: 'OPEN'  },
     { icon: '▶️', title: 'GHP Orientation', desc: 'Watch the required seminar before taking the quiz.',             href: '/ghp',    cta: 'WATCH NOW'  },
     { icon: '🔍', title: 'Verify MTV',       desc: 'Check the registration status of Meat Transport Vehicles.',     href: '/verify', cta: 'VERIFY NOW' },
   ]
@@ -83,10 +83,10 @@ export function CTAStrip() {
       <div className="container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap' }}>
         <span style={{ fontSize: '2.4rem' }}>📁</span>
         <div>
-          <h3 style={{ fontFamily: '"Barlow Condensed",sans-serif', fontSize: '1.4rem', fontWeight: 800, color: 'var(--white)' }}>SUBMIT YOUR APPLICATION</h3>
-          <p style={{ fontSize: '.9rem', color: 'rgba(255,255,255,.8)' }}>Submit your documentary requirements through the official online form.</p>
+          <h3 style={{ fontFamily: '"Public Sans",sans-serif', fontSize: '1.4rem', fontWeight: 800, color: 'var(--white)' }}>MTV APPLICATION</h3>
+          <p style={{ fontSize: '.9rem', color: 'rgba(255,255,255,.8)' }}>Submit requirements or check your application status in one place.</p>
         </div>
-        <a href="/apply" className="btn btn-white">📋 SUBMIT DOCUMENTS</a>
+        <a href="/apply" className="btn btn-white">📋 OPEN APPLICATION</a>
       </div>
     </section>
   )
@@ -104,7 +104,7 @@ export function InfoCards() {
           <div style={{ background: 'var(--white)', borderRadius: 'var(--radius)', border: '1px solid var(--gray-100)', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
             <div style={{ padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 12, background: '#fffbeb', borderBottom: '1px solid #fef3c7' }}>
               <span style={{ fontSize: '1.6rem' }}>🔔</span>
-              <h3 style={{ fontFamily: '"Barlow Condensed",sans-serif', fontSize: '1.15rem', fontWeight: 800, color: '#92400e' }}>IMPORTANT REMINDERS</h3>
+              <h3 style={{ fontFamily: '"Public Sans",sans-serif', fontSize: '1.15rem', fontWeight: 800, color: '#92400e' }}>IMPORTANT REMINDERS</h3>
             </div>
             <div style={{ padding: 20 }}>
               <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -120,7 +120,7 @@ export function InfoCards() {
           <div style={{ background: 'var(--white)', borderRadius: 'var(--radius)', border: '1px solid var(--gray-100)', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
             <div style={{ padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 12, background: '#fff5f5', borderBottom: '1px solid #fecaca' }}>
               <span style={{ fontSize: '1.6rem' }}>🚫</span>
-              <h3 style={{ fontFamily: '"Barlow Condensed",sans-serif', fontSize: '1.15rem', fontWeight: 800, color: 'var(--red)' }}>BANNED MTV LIST</h3>
+              <h3 style={{ fontFamily: '"Public Sans",sans-serif', fontSize: '1.15rem', fontWeight: 800, color: 'var(--red)' }}>BANNED MTV LIST</h3>
             </div>
             <div style={{ padding: 20, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 12 }}>
               <p style={{ fontSize: '.9rem', color: 'var(--gray-700)' }}>View the list of banned or suspended MTV units.</p>
@@ -132,7 +132,7 @@ export function InfoCards() {
           <div style={{ background: 'var(--white)', borderRadius: 'var(--radius)', border: '1px solid var(--gray-100)', overflow: 'hidden', boxShadow: 'var(--shadow-sm)' }}>
             <div style={{ padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 12, background: 'var(--blue-lt)', borderBottom: '1px solid #bde0f7' }}>
               <span style={{ fontSize: '1.6rem' }}>🎧</span>
-              <h3 style={{ fontFamily: '"Barlow Condensed",sans-serif', fontSize: '1.15rem', fontWeight: 800, color: 'var(--blue)' }}>NEED HELP?</h3>
+              <h3 style={{ fontFamily: '"Public Sans",sans-serif', fontSize: '1.15rem', fontWeight: 800, color: 'var(--blue)' }}>NEED HELP?</h3>
             </div>
             <div style={{ padding: 20, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 12 }}>
               <p style={{ fontSize: '.9rem', color: 'var(--gray-700)' }}>Visit our Help Page for FAQs and User Guide.</p>

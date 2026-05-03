@@ -25,12 +25,16 @@
 }
 
 .logo {
-  width: 52px; height: 52px;
-  border-radius: 50%;
-  background: var(--white);
+  width: 48px; height: 64px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 1.6rem;
   flex-shrink: 0;
+}
+
+.logo img {
+  display: block;
+  height: 100%;
+  object-fit: contain;
+  width: 100%;
 }
 
 .brandText {
@@ -40,7 +44,7 @@
   line-height: 1.2;
 }
 .republic { font-size: .72rem; opacity: .85; letter-spacing: .5px; }
-.agency   { font-family: "Barlow Condensed", sans-serif; font-size: 1.25rem; font-weight: 800; }
+.agency   { font-family: "Public Sans", sans-serif; font-size: 1.12rem; font-weight: 800; }
 .region   { font-size: .78rem; opacity: .8; }
 
 /* ── Search ── */
@@ -58,7 +62,7 @@
   outline: none;
   color: var(--white);
   padding: 8px 14px;
-  font-family: "Nunito", sans-serif;
+  font-family: "Public Sans", sans-serif;
   font-size: .9rem;
   width: 220px;
 }
