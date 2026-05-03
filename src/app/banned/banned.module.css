@@ -1,0 +1,25 @@
+/* app/banned/banned.module.css */
+
+.hero {
+  background: linear-gradient(135deg, #7f1d1d, #b91c1c);
+  padding: 36px 0 28px;
+}
+.hero h1 {
+  font-family: "Barlow Condensed", sans-serif;
+  font-size: 2rem; font-weight: 800; color: var(--white);
+}
+.hero p { color: rgba(255,255,255,.8); font-size: .93rem; margin-top: 4px; }
+
+.warning {
+  background: #fff5f5;
+  border: 1px solid #fca5a5;
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin-bottom: 24px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.warningIcon { font-size: 1.4rem; flex-shrink: 0; }
+.warning strong { color: var(--red); display: block; margin-bottom: 4px; }
+.warning p { font-size: .88rem; color: #7f1d1d; margin: 0; }

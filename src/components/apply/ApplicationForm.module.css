@@ -1,0 +1,8 @@
+/* components/apply/ApplicationForm.module.css */
+
+.container {
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}

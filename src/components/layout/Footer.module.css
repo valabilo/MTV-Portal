@@ -1,0 +1,26 @@
+/* components/layout/Footer.module.css */
+
+.footer {
+  background: var(--green);
+  color: rgba(255,255,255,.75);
+  padding: 18px 0;
+  font-size: .82rem;
+}
+
+.inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.links {
+  display: flex;
+  gap: 20px;
+}
+.links a {
+  color: rgba(255,255,255,.7);
+  text-decoration: none;
+}
+.links a:hover { color: var(--white); }
