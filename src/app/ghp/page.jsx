@@ -1,6 +1,6 @@
 "use client";
 /**
- * app/ghp/page.jsx – GHP Orientation (/ghp)
+ * app/ghp/page.jsx - GHP Orientation (/ghp)
  */
 
 import { useState } from "react";
@@ -23,7 +23,7 @@ export default function GHPPage() {
 
   function handleMarkWatched() {
     setVideoWatched(true);
-    showToast("Video marked as watched! Scroll down to take the quiz.");
+    showToast("Video marked as watched. Scroll down to take the quiz.");
     setTimeout(() => {
       document
         .getElementById("ghp-quiz")
@@ -35,7 +35,7 @@ export default function GHPPage() {
     setQuizScore(score);
     setQuizTotal(total ?? 10);
     setQuizPassed(true);
-    showToast("🎉 Congratulations! Scroll down to claim your certificate.");
+    showToast("You passed. Scroll down to claim your certificate.");
     setTimeout(() => {
       document
         .getElementById("ghp-cert")
@@ -47,26 +47,43 @@ export default function GHPPage() {
     <>
       <div className="page-hero">
         <div className="container">
-          <h1>▶️ GHP Orientation</h1>
-          <p>
-            Complete all three steps to receive your Good Hygiene Practices
-            Certificate of Completion via email.
-          </p>
+          <h1>Good Hygienic Practice (GHP) Orientation</h1>
+          <p>Required orientation for MTV drivers and pahinante before registration.</p>
         </div>
       </div>
 
       <div className={styles.page}>
         <div className="container">
+          <section className={styles.reminders}>
+            <h2>Important Reminders</h2>
+            <ul>
+              <li>Watch the entire orientation video before taking the exam.</li>
+              <li>Ensure a stable internet connection while taking the online exam.</li>
+              <li>There is no limit to the number of retakes if you do not pass.</li>
+              <li>The Certificate of Completion is required for MTV registration at the NMIS office.</li>
+            </ul>
+          </section>
+
+          <section className={styles.intro}>
+            <div>
+              <h2>Good Hygienic Practices (GHP) Virtual Orientation</h2>
+              <p>
+                GHP Orientation for MTV drivers and pahinante is conducted to ensure awareness and understanding of sanitary practices, proper handling procedures, safety measures in the transport of meat, and NMIS rules and regulations.
+              </p>
+            </div>
+            <div>
+              <h2>Online Examination</h2>
+              <p>
+                An online examination is administered after the orientation. Participants who obtain a passing score of at least 70% shall be issued a Certificate of Attendance. Retakes are allowed when the passing score is not met.
+              </p>
+            </div>
+          </section>
+
           <StepsBar currentStep={currentStep} />
 
           <div className={styles.panels}>
-            {/* STEP 1 – Watch video */}
-            <VideoCard
-              watched={videoWatched}
-              onMarkWatched={handleMarkWatched}
-            />
+            <VideoCard watched={videoWatched} onMarkWatched={handleMarkWatched} />
 
-            {/* STEP 2 – Quiz */}
             <div id="ghp-quiz">
               <QuizCard
                 unlocked={videoWatched}
@@ -75,7 +92,6 @@ export default function GHPPage() {
               />
             </div>
 
-            {/* STEP 3 – Certificate */}
             <div id="ghp-cert">
               <CertCard
                 unlocked={quizPassed}

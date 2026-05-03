@@ -123,20 +123,42 @@ export async function saveApplication(data) {
     data.vmodel,
     data.vyear,
     data.capacity,
-    data.bname,
-    data.btype,
-    data.baddress,
+    data.bname || data.meatEstablishment || "",
+    data.btype ?? "",
+    data.baddress || data.intendedRoute || "",
     data.driveFolderId ?? "",
     "Pending",
+    data.applicationType ?? "",
+    data.middlename ?? "",
+    data.suffix ?? "",
+    data.region ?? "",
+    data.ghpCertNumber ?? "",
+    data.ownerName ?? "",
+    data.operatorName ?? "",
+    data.businessTin ?? "",
+    data.vcolor ?? "",
+    data.vengine ?? "",
+    data.vchassis ?? "",
+    data.crNumber ?? "",
+    data.orNumber ?? "",
+    data.ltoClientId ?? "",
+    data.bodyType ?? "",
+    data.fuelType ?? "",
+    data.cooling ?? "",
+    data.grossWeight ?? "",
+    data.netCapacity ?? "",
+    data.material ?? "",
+    data.meatEstablishment ?? "",
+    data.intendedRoute ?? "",
   ]);
 }
 
 /**
  * Saves a contact form message.
- * Sheet tab name: Contacts
+ * Sheet tab name: Contact
  */
 export async function saveContactMessage(data) {
-  return appendRow("Contacts", [
+  return appendRow("Contact", [
     new Date().toISOString(),
     data.name,
     data.email,

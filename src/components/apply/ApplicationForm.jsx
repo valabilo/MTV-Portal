@@ -10,7 +10,7 @@
  * complete GHP before applying here.
  */
 
-import { useState } from 'react'
+import { useMemo, useState, useTransition } from 'react'
 import { useToast }       from '@/hooks/useToast'
 import { REQUIRED_DOCS }  from '@/data/requiredDocs'
 import Toast              from '@/components/ui/Toast'
@@ -23,10 +23,14 @@ import SuccessView        from './SuccessView'
 import styles             from './ApplicationForm.module.css'
 
 const INITIAL_FORM = {
+  applicationType: 'New',
   firstname: '', lastname: '', middlename: '', suffix: '',
   email: '', contact: '', address: '', region: 'III', province: '',
+  ownerName: '', operatorName: '', businessTin: '',
   plate: '', vtype: '', vmake: '', vmodel: '', vyear: '', vcolor: '',
-  vengine: '', vchassis: '', cooling: '', capacity: '', material: '',
+  vengine: '', vchassis: '', crNumber: '', orNumber: '', ltoClientId: '',
+  bodyType: '', fuelType: '', cooling: '', capacity: '', grossWeight: '',
+  netCapacity: '', material: '', meatEstablishment: '', intendedRoute: '',
   bname: '', btype: '', baddress: '',
   ghpCertNumber: '',
 }
@@ -39,31 +43,42 @@ export default function ApplicationForm() {
   const [refNumber,  setRefNumber] = useState('')
   const [submitted,  setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [validatingGhp, setValidatingGhp] = useState(false)
+  const [optimisticMessage, setOptimisticMessage] = useState('')
+  const [, startTransition] = useTransition()
 
   const { toastState, showToast } = useToast()
+  const submissionId = useMemo(
+    () => (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`),
+    [],
+  )
 
   function updateField(key, value) {
     setFormData(prev => ({ ...prev, [key]: value }))
   }
 
-  function goToStep(target, validate = false) {
+  async function goToStep(target, validate = false) {
     if (validate && !runValidation(step)) return
+    if (validate && step === 1) {
+      const validGhp = await validateOptionalGhpControlNo()
+      if (!validGhp) return
+    }
     setStep(target)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   function runValidation(currentStep) {
     const requiredByStep = {
-      1: ['firstname','lastname','email','contact','address','province','ghpCertNumber'],
-      2: ['plate','vtype','vmake','vmodel','vyear','capacity','bname','btype','baddress'],
+      1: ['firstname','lastname','email','contact','address','province'],
+      2: ['applicationType','ownerName','plate','vtype','vmake','vmodel','vyear','capacity','meatEstablishment','intendedRoute'],
       3: [],
     }
     const missing = (requiredByStep[currentStep] || []).filter(k => !formData[k]?.trim())
     if (missing.length) { showToast('Please fill in all required fields.', true); return false }
     if (currentStep === 3) {
-      const missingDocs = REQUIRED_DOCS.filter(doc => !files[doc.id])
+      const missingDocs = REQUIRED_DOCS.filter(doc => doc.required && !files[doc.id])
       if (missingDocs.length) {
-        showToast('Please upload all required documents, including the GHP certificate.', true)
+        showToast('Please upload all required documents.', true)
         return false
       }
     }
@@ -71,39 +86,50 @@ export default function ApplicationForm() {
     return true
   }
 
-  /**
-   * Converts all uploaded File objects to base64 strings so they can be
-   * sent as JSON to the API route, which forwards them to Google Drive.
-   */
-  async function filesToBase64(filesMap) {
-    const result = {}
-    for (const [docId, file] of Object.entries(filesMap)) {
-      result[docId] = await new Promise((resolve, reject) => {
-        const reader = new FileReader()
-        reader.onload  = () => resolve({
-          base64: reader.result,          // "data:application/pdf;base64,..."
-          name:   file.name,
-          mime:   file.type,
-        })
-        reader.onerror = reject
-        reader.readAsDataURL(file)
+  async function validateOptionalGhpControlNo() {
+    const controlNo = formData.ghpCertNumber?.trim()
+    if (!controlNo) return true
+
+    setValidatingGhp(true)
+    try {
+      const res = await fetch(`/api/ghp/certificate?id=${encodeURIComponent(controlNo)}`, {
+        cache: 'no-store',
       })
+      const json = await res.json()
+
+      if (!res.ok || !json.success || json.certificate?.isExpired) {
+        showToast('The GHP certificate control number is not valid. Leave it blank or enter a valid control number.', true)
+        return false
+      }
+
+      return true
+    } catch {
+      showToast('Unable to validate the GHP certificate control number. Please try again or leave it blank.', true)
+      return false
+    } finally {
+      setValidatingGhp(false)
     }
-    return result
   }
 
   async function handleSubmit() {
+    if (submitting) return
+    const validGhp = await validateOptionalGhpControlNo()
+    if (!validGhp) return
     setSubmitting(true)
+    startTransition(() => setOptimisticMessage('Securing your application and uploading documents...'))
     try {
-      // Convert files to base64 for transport
-      const documents = Object.keys(files).length > 0
-        ? await filesToBase64(files)
-        : {}
+      const payload = new FormData()
+      payload.append('submissionId', submissionId)
+      Object.entries(formData).forEach(([key, value]) => {
+        payload.append(key, value ?? '')
+      })
+      Object.entries(files).forEach(([docId, file]) => {
+        payload.append(`document:${docId}`, file, file.name)
+      })
 
       const res  = await fetch('/api/applications', {
         method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ ...formData, documents }),
+        body:    payload,
       })
       const json = await res.json()
       if (!json.success) throw new Error(json.error)
@@ -116,6 +142,7 @@ export default function ApplicationForm() {
       showToast(err.message || 'Submission failed. Please try again.', true)
     } finally {
       setSubmitting(false)
+      setOptimisticMessage('')
     }
   }
 
@@ -136,12 +163,22 @@ export default function ApplicationForm() {
     <>
       <div className={styles.container}>
         <FormProgress currentStep={step} />
+        {optimisticMessage && (
+          <div className={styles.optimistic} role="status" aria-live="polite">
+            <span className={styles.optimisticSpinner} />
+            <div>
+              <strong>Application is being submitted</strong>
+              <p>{optimisticMessage}</p>
+            </div>
+          </div>
+        )}
 
         {step === 1 && (
           <Step1Applicant
             data={formData}
             onChange={updateField}
             onNext={() => goToStep(2, true)}
+            validatingGhp={validatingGhp}
           />
         )}
         {step === 2 && (

@@ -108,3 +108,31 @@ export async function sendContactReply(email, subject, message) {
     `,
   });
 }
+
+export async function sendContactNotification({ name, email, phone, subject, message }) {
+  const transport = getTransporter();
+  const recipient =
+    process.env.CONTACT_RECIPIENT_EMAIL ||
+    process.env.NMIS_CONTACT_EMAIL ||
+    process.env.GMAIL_USER ||
+    process.env.EMAIL_USER;
+
+  if (!recipient) {
+    throw new Error("Missing CONTACT_RECIPIENT_EMAIL or Gmail sender address.");
+  }
+
+  return transport.sendMail({
+    to: recipient,
+    replyTo: email,
+    subject: `MTV Portal Contact: ${subject}`,
+    html: `
+      <h2>New MTV Portal Contact Message</h2>
+      <p><strong>Name:</strong> ${name}</p>
+      <p><strong>Email:</strong> ${email}</p>
+      <p><strong>Phone:</strong> ${phone || "Not provided"}</p>
+      <p><strong>Subject:</strong> ${subject}</p>
+      <p><strong>Message:</strong></p>
+      <p>${message}</p>
+    `,
+  });
+}

@@ -2,27 +2,49 @@
  * components/home/HeroSection.jsx
  */
 
-import styles from './HeroSection.module.css'
+import styles from "./HeroSection.module.css";
 
 export default function HeroSection() {
   return (
     <section className={styles.hero}>
       <div className={`container ${styles.inner}`}>
         <div>
-          <div className={styles.badge}>🏛️ Official Government Portal</div>
-          <h1 className={styles.title}>MTV PORTAL<br />SYSTEM</h1>
-          <h2 className={styles.subtitle}>One-Stop Platform for MTV Registration and Compliance</h2>
+          <div className={styles.badge}>Official Government Portal</div>
+          <h1 className={styles.title}>
+            MTV Portal
+            <br />
+            System
+          </h1>
+          <h2 className={styles.subtitle}>
+            One-stop platform for MTV registration and compliance
+          </h2>
           <p>
-            Access information, attend orientation, take the quiz, submit your
-            application and track your status online.
+            Review requirements, complete GHP orientation, submit your MTV
+            application, and verify records in one organized portal.
           </p>
           <div className={styles.actions}>
-            <a href="/apply"  className="btn btn-white">📋 MTV APPLICATION</a>
-            <a href="/verify" className={styles.btnOutlineWhite}>🔍 VERIFY MTV</a>
+            <a href="/apply" className="btn btn-white">
+              MTV Application
+            </a>
+            <a href="/verify" className={styles.btnOutlineWhite}>
+              Verify MTV
+            </a>
           </div>
         </div>
-        <div className={styles.truck} aria-hidden="true">🚛</div>
+
+        <div className={styles.portalCard} aria-hidden="true">
+          <div className={styles.cardTopline} />
+          <div className={styles.vehicleShape}>
+            <span />
+            <span />
+          </div>
+          <div className={styles.cardRows}>
+            <span />
+            <span />
+            <span />
+          </div>
+        </div>
       </div>
     </section>
-  )
+  );
 }

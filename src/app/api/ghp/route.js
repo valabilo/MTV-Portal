@@ -14,14 +14,36 @@
 import { NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
 import { readSheet, appendRow } from "@/lib/googleSheets";
+import { validateEmail, validateName } from "@/lib/validators";
+
+const activeCertificates = globalThis.__mtvActiveCertificates ?? new Set();
+globalThis.__mtvActiveCertificates = activeCertificates;
+
+function clean(value, limit = 180) {
+  return String(value ?? "")
+    .replace(/[\u0000-\u001F\u007F]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, limit);
+}
 
 export async function POST(request) {
+  let attemptKey = "";
   try {
-    const { name, email, score } = await request.json();
+    const body = await request.json();
+    const name = clean(body.name);
+    const email = clean(body.email).toLowerCase();
+    const score = Number(body.score);
 
-    if (!name || !email || score === undefined) {
+    if (!name || !email || !Number.isFinite(score)) {
       return NextResponse.json(
         { success: false, error: "Missing name, email or score" },
+        { status: 400 },
+      );
+    }
+    if (!validateName(name) || !validateEmail(email)) {
+      return NextResponse.json(
+        { success: false, error: "Invalid name or email address" },
         { status: 400 },
       );
     }
@@ -43,6 +65,13 @@ export async function POST(request) {
     const pct = score / totalQuestions;
     const passed = pct >= passThreshold;
 
+    if (!Number.isInteger(score) || score < 0 || score > totalQuestions) {
+      return NextResponse.json(
+        { success: false, error: "Invalid quiz score" },
+        { status: 400 },
+      );
+    }
+
     if (!passed) {
       return NextResponse.json(
         {
@@ -52,6 +81,15 @@ export async function POST(request) {
         { status: 400 },
       );
     }
+
+    attemptKey = `${email}:${new Date().toISOString().slice(0, 10)}`;
+    if (activeCertificates.has(attemptKey)) {
+      return NextResponse.json(
+        { success: false, error: "Your certificate request is already being processed." },
+        { status: 409 },
+      );
+    }
+    activeCertificates.add(attemptKey);
 
     // ── 2. Generate identifiers ──
     const attemptId = uuidv4();
@@ -91,5 +129,7 @@ export async function POST(request) {
       },
       { status: 500 },
     );
+  } finally {
+    if (attemptKey) activeCertificates.delete(attemptKey);
   }
 }

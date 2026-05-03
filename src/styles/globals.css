@@ -10,6 +10,7 @@
    ════════════════════════════════════════════════════════════ */
 :root {
   /* Brand colors */
+  --green-deep:  #123a28;
   --green:       #1a5c32;
   --green-mid:   #236b3b;
   --green-lt:    #2e8b51;
@@ -237,7 +238,7 @@ tbody td { padding: 12px 16px; color: var(--gray-700); }
    PAGE HERO (inner pages)
    ════════════════════════════════════════════════════════════ */
 .page-hero {
-  background: linear-gradient(135deg, var(--green), var(--green-lt));
+  background: linear-gradient(135deg, var(--green-deep), var(--green), var(--green-lt));
   padding: 36px 0 28px;
 }
 .page-hero h1 {

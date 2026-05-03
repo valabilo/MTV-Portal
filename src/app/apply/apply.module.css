@@ -1,0 +1,71 @@
+.page {
+  padding: 40px 0;
+}
+
+.intro {
+  background: var(--white);
+  border: 1px solid var(--gray-100);
+  border-radius: 8px;
+  box-shadow: var(--shadow-sm);
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.intro p {
+  color: var(--gray-700);
+  font-size: .95rem;
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-top: 22px;
+}
+
+.step {
+  border-left: 4px solid var(--green);
+  background: var(--gray-50);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.step h2 {
+  font-size: 1rem;
+  color: var(--green-deep);
+  margin-bottom: 8px;
+}
+
+.step p,
+.reminders li {
+  color: var(--gray-700);
+  font-size: .9rem;
+}
+
+.reminders {
+  background: var(--white);
+  border: 1px solid var(--gray-100);
+  border-radius: 8px;
+  box-shadow: var(--shadow-sm);
+  padding: 24px;
+  margin: 28px 0;
+}
+
+.reminders h2 {
+  font-size: 1.15rem;
+  color: var(--green);
+  margin-bottom: 14px;
+}
+
+.reminders ul {
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+@media (max-width: 780px) {
+  .steps {
+    grid-template-columns: 1fr;
+  }
+}

@@ -5,25 +5,50 @@
 
 import styles from './FormSteps.module.css'
 
+const APPLICATION_TYPES = ['New', 'Renewal', 'Amendment']
 const VEHICLE_TYPES = [
-  'Refrigerated Truck','Insulated Truck','Open Truck with Cover',
-  'Closed Van','Refrigerated Van','Motorcycle with Insulated Box',
+  'Refrigerated Truck',
+  'Insulated Truck',
+  'Closed Van',
+  'Refrigerated Van',
+  'Chiller / Freezer Van',
+  'Motorcycle with Insulated Box',
 ]
-const MATERIALS    = ['Stainless Steel','Fiberglass','Aluminum','Polyurethane Foam']
-const BUSINESS_TYPES = ['Sole Proprietorship','Partnership','Corporation','Cooperative']
+const MATERIALS = ['Stainless Steel', 'Fiberglass', 'Aluminum', 'Food-grade Plastic', 'Polyurethane Foam']
 
 export default function Step2Vehicle({ data, onChange, onBack, onNext }) {
   const f = (id, type = 'text') => ({
     id,
     type,
-    value:    data[id] ?? '',
+    value: data[id] ?? '',
     onChange: (e) => onChange(id, e.target.value),
   })
 
   return (
     <div className={styles.body}>
-      {/* Vehicle */}
-      <h2 className={styles.sectionTitle}>🚛 Vehicle Information</h2>
+      <h2 className={styles.sectionTitle}>Application Details</h2>
+      <div className="form-grid">
+        <div className="form-group">
+          <label htmlFor="applicationType">Type of Application <span className="req">*</span></label>
+          <select id="applicationType" value={data.applicationType} onChange={e => onChange('applicationType', e.target.value)}>
+            {APPLICATION_TYPES.map(t => <option key={t}>{t}</option>)}
+          </select>
+        </div>
+        <div className="form-group">
+          <label htmlFor="ownerName">Registered Owner <span className="req">*</span></label>
+          <input placeholder="Name appearing on CR" {...f('ownerName')} />
+        </div>
+        <div className="form-group">
+          <label htmlFor="operatorName">Operator / Authorized Representative</label>
+          <input placeholder="If different from owner" {...f('operatorName')} />
+        </div>
+        <div className="form-group">
+          <label htmlFor="businessTin">TIN / Business Registration No.</label>
+          <input placeholder="TIN or registration number" {...f('businessTin')} />
+        </div>
+      </div>
+
+      <h2 className={styles.sectionTitle} style={{ marginTop: 8 }}>Vehicle Information</h2>
       <div className="form-grid">
         <div className="form-group">
           <label htmlFor="plate">Plate Number <span className="req">*</span></label>
@@ -45,8 +70,8 @@ export default function Step2Vehicle({ data, onChange, onBack, onNext }) {
           <input placeholder="e.g. Elf, Canter" {...f('vmodel')} />
         </div>
         <div className="form-group">
-          <label htmlFor="vyear">Year <span className="req">*</span></label>
-          <input type="number" placeholder="2020" min="1990" max="2030" {...f('vyear','number')} />
+          <label htmlFor="vyear">Year Model <span className="req">*</span></label>
+          <input type="number" placeholder="2020" min="1950" max="2030" {...f('vyear','number')} />
         </div>
         <div className="form-group">
           <label htmlFor="vcolor">Color</label>
@@ -60,18 +85,41 @@ export default function Step2Vehicle({ data, onChange, onBack, onNext }) {
           <label htmlFor="vchassis">Chassis Number</label>
           <input placeholder="Chassis number" {...f('vchassis')} />
         </div>
+        <div className="form-group">
+          <label htmlFor="crNumber">CR Number</label>
+          <input placeholder="Certificate of Registration no." {...f('crNumber')} />
+        </div>
+        <div className="form-group">
+          <label htmlFor="orNumber">OR Number</label>
+          <input placeholder="Official Receipt no." {...f('orNumber')} />
+        </div>
+        <div className="form-group">
+          <label htmlFor="ltoClientId">LTO Client ID</label>
+          <input placeholder="LTO client ID" {...f('ltoClientId')} />
+        </div>
+        <div className="form-group">
+          <label htmlFor="fuelType">Fuel Type</label>
+          <input placeholder="Diesel / Gasoline / Electric" {...f('fuelType')} />
+        </div>
       </div>
 
-      {/* Cargo Compartment */}
-      <h2 className={styles.sectionTitle} style={{ marginTop: 8 }}>🌡️ Cargo Compartment</h2>
+      <h2 className={styles.sectionTitle} style={{ marginTop: 8 }}>Cargo Compartment</h2>
       <div className="form-grid-3">
         <div className="form-group">
-          <label htmlFor="cooling">Cooling Capacity (°C)</label>
-          <input placeholder="e.g. 0°C to -18°C" {...f('cooling')} />
+          <label htmlFor="cooling">Cooling Capacity</label>
+          <input placeholder="e.g. 0 C to -18 C" {...f('cooling')} />
         </div>
         <div className="form-group">
           <label htmlFor="capacity">Load Capacity (kg) <span className="req">*</span></label>
-          <input type="number" placeholder="500" {...f('capacity','number')} />
+          <input type="number" placeholder="500" min="1" {...f('capacity','number')} />
+        </div>
+        <div className="form-group">
+          <label htmlFor="grossWeight">Gross Weight (kg)</label>
+          <input type="number" placeholder="3500" min="1" {...f('grossWeight','number')} />
+        </div>
+        <div className="form-group">
+          <label htmlFor="netCapacity">Net Capacity (kg)</label>
+          <input type="number" placeholder="2500" min="1" {...f('netCapacity','number')} />
         </div>
         <div className="form-group">
           <label htmlFor="material">Compartment Material</label>
@@ -80,31 +128,27 @@ export default function Step2Vehicle({ data, onChange, onBack, onNext }) {
             {MATERIALS.map(m => <option key={m}>{m}</option>)}
           </select>
         </div>
+        <div className="form-group">
+          <label htmlFor="bodyType">Body Type</label>
+          <input placeholder="Closed van, reefer body, etc." {...f('bodyType')} />
+        </div>
       </div>
 
-      {/* Business */}
-      <h2 className={styles.sectionTitle} style={{ marginTop: 8 }}>🏢 Business Information</h2>
+      <h2 className={styles.sectionTitle} style={{ marginTop: 8 }}>Business Information</h2>
       <div className="form-grid">
         <div className="form-group">
-          <label htmlFor="bname">Business Name <span className="req">*</span></label>
-          <input placeholder="Dela Cruz Meat Trader" {...f('bname')} />
+          <label htmlFor="meatEstablishment">Accredited Meat Establishment to be served <span className="req">*</span></label>
+          <input placeholder="Name of accredited meat establishment" {...f('meatEstablishment')} />
         </div>
         <div className="form-group">
-          <label htmlFor="btype">Business Type <span className="req">*</span></label>
-          <select id="btype" value={data.btype} onChange={e => onChange('btype', e.target.value)}>
-            <option value="">-- Select --</option>
-            {BUSINESS_TYPES.map(t => <option key={t}>{t}</option>)}
-          </select>
-        </div>
-        <div className="form-group full">
-          <label htmlFor="baddress">Business Address <span className="req">*</span></label>
-          <input placeholder="Complete business address" {...f('baddress')} />
+          <label htmlFor="intendedRoute">Destination (major markets to be served) <span className="req">*</span></label>
+          <input placeholder="Major markets, cities, or delivery areas" {...f('intendedRoute')} />
         </div>
       </div>
 
       <div className="form-footer">
-        <button className="btn btn-outline" onClick={onBack}>← Back</button>
-        <button className="btn btn-primary" onClick={onNext}>Next: Documents →</button>
+        <button className="btn btn-outline" onClick={onBack}>Back</button>
+        <button className="btn btn-primary" onClick={onNext}>Next: Documents</button>
       </div>
     </div>
   )

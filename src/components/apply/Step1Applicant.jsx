@@ -3,7 +3,7 @@
  * components/apply/Step1Applicant.jsx
  *
  * Step 1 of the MTV application form: Applicant Information.
- * Includes a required GHP Certificate Number field.
+ * Includes an optional GHP Certificate Number field.
  */
 
 import styles from './FormSteps.module.css'
@@ -18,7 +18,7 @@ const PROVINCES = [
   'Pampanga', 'Bulacan', 'Tarlac', 'Nueva Ecija', 'Bataan', 'Zambales', 'Aurora',
 ]
 
-export default function Step1Applicant({ data, onChange, onNext }) {
+export default function Step1Applicant({ data, onChange, onNext, validatingGhp = false }) {
   const f = (id, type = 'text') => ({
     id,
     type,
@@ -88,21 +88,20 @@ export default function Step1Applicant({ data, onChange, onNext }) {
         marginBottom: 24,
       }}>
         <div style={{ fontWeight: 800, color: 'var(--green)', marginBottom: 8, fontSize: '.95rem' }}>
-          GHP Certificate Number <span className="req">*</span>
+          GHP Certificate Number <span style={{ color: 'var(--gray-500)', fontWeight: 600 }}>(optional)</span>
         </div>
         <p style={{ fontSize: '.85rem', color: 'var(--gray-700)', marginBottom: 12, lineHeight: 1.6 }}>
-          Complete the GHP Orientation first, then enter your certificate number below.
-          This is required before you can proceed with your application.
+          Enter your certificate number if available. You may still proceed without this field.
+          If you enter one, it must match a valid NMIS GHP certificate control number.
         </p>
         <div className="form-group" style={{ margin: 0 }}>
           <input
             id="ghpCertNumber"
             type="text"
-            placeholder="e.g. GHP-CLU-2026-48291"
+            placeholder="e.g. GHP-2026-123456"
             value={data.ghpCertNumber ?? ''}
             onChange={e => onChange('ghpCertNumber', e.target.value.toUpperCase())}
             style={{ fontFamily: 'monospace', letterSpacing: '1px' }}
-            required
           />
           <span className="form-hint">
             Don't have one yet?{' '}
@@ -117,8 +116,8 @@ export default function Step1Applicant({ data, onChange, onNext }) {
         <span style={{ fontSize: '.85rem', color: 'var(--gray-500)' }}>
           <span className="req">*</span> Required fields
         </span>
-        <button className="btn btn-primary" onClick={onNext}>
-          Next: Vehicle Details
+        <button className="btn btn-primary" onClick={onNext} disabled={validatingGhp}>
+          {validatingGhp ? 'Validating GHP...' : 'Next: Vehicle Details'}
         </button>
       </div>
     </div>

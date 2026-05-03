@@ -28,7 +28,7 @@ export function validateYear(year) {
 
 export function validateCapacity(capacity) {
   const cap = parseFloat(capacity);
-  return cap > 0 && cap <= 100;
+  return cap > 0 && cap <= 50000;
 }
 
 export function validateAddress(address) {

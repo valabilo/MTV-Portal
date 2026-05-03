@@ -4,7 +4,7 @@
  */
 
 import { REQUIRED_DOCS } from '@/data/requiredDocs'
-import styles  from './FormSteps.module.css'
+import styles from './FormSteps.module.css'
 import rStyles from './Step4Review.module.css'
 
 function getDocName(doc) {
@@ -15,7 +15,7 @@ function ReviewRow({ label, value }) {
   return (
     <div className={rStyles.row}>
       <span className={rStyles.rowLabel}>{label}</span>
-      <span className={rStyles.rowValue}>{value || '—'}</span>
+      <span className={rStyles.rowValue}>{value || '-'}</span>
     </div>
   )
 }
@@ -23,38 +23,39 @@ function ReviewRow({ label, value }) {
 export default function Step4Review({ data, files, submitting, onBack, onSubmit }) {
   return (
     <div className={styles.body}>
-      <h2 className={styles.sectionTitle}>🔎 Review Your Application</h2>
+      <h2 className={styles.sectionTitle}>Review Your Application</h2>
 
       <div className={rStyles.grid}>
-        {/* Applicant */}
         <div className={rStyles.block}>
-          <h3 className={rStyles.blockTitle}>👤 Applicant</h3>
-          <ReviewRow
-            label="Name"
-            value={`${data.firstname} ${data.middlename} ${data.lastname} ${data.suffix}`.trim()}
-          />
-          <ReviewRow label="Email"    value={data.email}    />
-          <ReviewRow label="Contact"  value={data.contact}  />
-          <ReviewRow label="Address"  value={data.address}  />
+          <h3 className={rStyles.blockTitle}>Applicant</h3>
+          <ReviewRow label="Name" value={`${data.firstname} ${data.middlename} ${data.lastname} ${data.suffix}`.trim()} />
+          <ReviewRow label="Email" value={data.email} />
+          <ReviewRow label="Contact" value={data.contact} />
+          <ReviewRow label="Address" value={data.address} />
           <ReviewRow label="Province" value={data.province} />
-          <ReviewRow label="GHP Cert No." value={data.ghpCertNumber} />
+          <ReviewRow label="GHP Cert No. (optional)" value={data.ghpCertNumber} />
         </div>
 
-        {/* Vehicle */}
         <div className={rStyles.block}>
-          <h3 className={rStyles.blockTitle}>🚛 Vehicle</h3>
-          <ReviewRow label="Plate No."    value={data.plate}  />
-          <ReviewRow label="Type"         value={data.vtype}  />
+          <h3 className={rStyles.blockTitle}>Application and Vehicle</h3>
+          <ReviewRow label="Application Type" value={data.applicationType} />
+          <ReviewRow label="Registered Owner" value={data.ownerName} />
+          <ReviewRow label="Plate No." value={data.plate} />
+          <ReviewRow label="Type" value={data.vtype} />
           <ReviewRow label="Make / Model" value={`${data.vmake} ${data.vmodel} (${data.vyear})`} />
-          <ReviewRow label="Capacity"     value={data.capacity ? `${data.capacity} kg` : ''} />
-          <ReviewRow label="Business"     value={data.bname}  />
-          <ReviewRow label="Biz Type"     value={data.btype}  />
+          <ReviewRow label="Engine / Chassis" value={`${data.vengine || '-'} / ${data.vchassis || '-'}`} />
+          <ReviewRow label="Capacity" value={data.capacity ? `${data.capacity} kg` : ''} />
+        </div>
+
+        <div className={rStyles.block}>
+          <h3 className={rStyles.blockTitle}>Business Information</h3>
+          <ReviewRow label="Accredited Meat Establishment to be served" value={data.meatEstablishment} />
+          <ReviewRow label="Destination (major markets to be served)" value={data.intendedRoute} />
         </div>
       </div>
 
-      {/* Documents checklist */}
       <div className={rStyles.docsBlock}>
-        <h3 className={rStyles.blockTitle}>📂 Documents</h3>
+        <h3 className={rStyles.blockTitle}>Documents</h3>
         <div className={rStyles.docTags}>
           {REQUIRED_DOCS.map(doc => {
             const docName = getDocName(doc)
@@ -64,22 +65,22 @@ export default function Step4Review({ data, files, submitting, onBack, onSubmit 
                 key={doc.id}
                 className={`tag ${files[doc.id] ? 'tag-active' : 'tag-pending'}`}
               >
-                {files[doc.id] ? '✅' : '⏳'} {docName}
+                {files[doc.id] ? 'Attached' : doc.required ? 'Missing' : 'Optional'}: {docName}
               </span>
             )
           })}
         </div>
         <p style={{ fontSize: '.82rem', color: 'var(--gray-500)', marginTop: 10 }}>
-          📁 All attached documents will be saved to the NMIS Google Drive folder.
+          All attached documents will be saved to the NMIS Google Drive folder.
         </p>
       </div>
 
       <div className="form-footer">
         <button className="btn btn-outline" onClick={onBack} disabled={submitting}>
-          ← Back
+          Back
         </button>
         <button className="btn btn-primary" onClick={onSubmit} disabled={submitting}>
-          {submitting ? '⏳ Submitting…' : '✅ SUBMIT APPLICATION'}
+          {submitting ? 'Submitting...' : 'Submit Application'}
         </button>
       </div>
     </div>

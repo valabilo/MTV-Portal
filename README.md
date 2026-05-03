@@ -1,224 +1,243 @@
 # MTV Portal System
 
-### National Meat Inspection Service – Central Luzon Region
+National Meat Inspection Service - Central Luzon Regional Office
 
-A production-ready government web application for Meat Transportation Vehicle (MTV) Accreditation, built with **Next.js 14**. All services used are **100% free**.
+A Next.js 14 portal for Meat Transport Vehicle (MTV) registration, GHP orientation, application submission, downloadable requirements, verification, and public contact support.
 
----
-
-## Quick Start (Local)
+## Quick Start
 
 ```bash
-# 1. Install dependencies
 npm install
-
-# 2. Copy environment file
-cp .env.example .env.local
-# Edit .env.local — leave NEXT_PUBLIC_DEMO_MODE=true for local testing
-
-# 3. Run development server
 npm run dev
-# Open http://localhost:3000
 ```
 
-> Demo mode works immediately — no Google account needed.
+Open:
 
----
-
-## Why This Is Free
-
-| Service                | Usage                                    | Cost                    |
-| ---------------------- | ---------------------------------------- | ----------------------- |
-| **Google Sheets API**  | Read/write accredited & banned MTV lists | Free (within quota)     |
-| **Google Drive API**   | Store MTV application documents          | Free (15 GB included)   |
-| **Gmail + Nodemailer** | Send GHP certificates & acknowledgements | Free (500/day via SMTP) |
-| **Vercel**             | Hosting + serverless API routes          | Free tier               |
-| **Next.js**            | Framework                                | Open source             |
-
-> You only need a Google account and a free Gmail address. No billing required.
-
----
-
-## Free Services Setup
-
-### A. Gmail App Password (for sending certificates)
-
-1. Go to your Google Account → **Security**
-2. Enable **2-Step Verification** (required for App Passwords)
-3. Go to **Security → App Passwords**
-4. Select app: **Mail**, device: **Other** → name it "MTV Portal"
-5. Copy the 16-character password → paste into `GMAIL_APP_PASSWORD` in `.env.local`
-
-### C. Google OAuth 2.0 (for Google Drive + Sheets)
-
-1. Go to [console.cloud.google.com](https://console.cloud.google.com) → Create a free project
-2. Enable **Google Drive API** and **Google Sheets API** (both free)
-3. Go to **APIs & Services → Credentials** → **Create Credentials → OAuth 2.0 Client IDs**
-4. Choose **Desktop application** → Name it "MTV Portal"
-5. Download the JSON file → copy `client_id` and `client_secret`
-6. Copy your **Spreadsheet ID** from the Sheet URL → `GOOGLE_SHEET_ID`
-7. Copy your **Drive folder ID** from the folder URL → `GOOGLE_DRIVE_FOLDER_ID`
-8. **Share** both the spreadsheet and Drive folder with your Gmail address (Editor access)
-9. Run the refresh token script:
-   ```bash
-   node get-refresh-token.js
-   ```
-   Follow the prompts to get your `GOOGLE_REFRESH_TOKEN`
-
----
-
-## Google Sheets Structure
-
-Create a spreadsheet with **five tabs**:
-
-### `Accredited` (existing MTV records — edit manually or import CSV)
-
-```
-plate | business | type | owner | expiry | status
+```txt
+http://localhost:3000
 ```
 
-### `Banned`
+## Environment Variables
 
-```
-plate | business | owner | reason | date | status
-```
+Create or update `.env`:
 
-### `Applications` (written automatically by the system)
-
-```
-ref_number | timestamp | firstname | lastname | email | contact |
-address | province | plate | vtype | vmake | vmodel | vyear |
-capacity | bname | btype | baddress | drive_folder_id | status
-```
-
-### `GHP_Completions` (written automatically)
-
-```
-cert_number | timestamp | name | email | score | pct | issued_date
-```
-
-### `Contacts` (written automatically)
-
-```
-timestamp | name | email | phone | subject | message | status
-```
-
----
-
-## Google Drive Structure
-
-Create one folder in your Google Drive, e.g. **"MTV Applications"**.
-
-- Share it with your service account email (Editor access).
-- Copy the folder ID from the URL → `GOOGLE_DRIVE_FOLDER_ID`.
-
-When an application is submitted, the system automatically creates a **sub-folder** named `MTV-2025-XXXXX_ApplicantName` inside your folder, and uploads each document into it.
-
----
-
-## Project Structure
-
-```
-src/
-├── app/                        ← Pages + API routes
-│   ├── page.jsx                ← Home (/)
-│   ├── ghp/page.jsx            ← GHP Orientation — STANDALONE
-│   ├── apply/page.jsx          ← MTV Application — STANDALONE
-│   ├── verify/page.jsx         ← Verify MTV
-│   ├── banned/page.jsx         ← Banned list
-│   ├── contact/page.jsx        ← Contact Us
-│   └── api/
-│       ├── ghp/route.js        ← POST: validate quiz + send certificate email
-│       ├── verify/route.js     ← GET: accredited MTV list
-│       ├── banned/route.js     ← GET: banned MTV list
-│       ├── applications/route.js ← POST: save application + upload docs to Drive
-│       └── contact/route.js    ← POST: save contact message
-│
-├── components/
-│   ├── layout/  Header, Footer
-│   ├── ui/      Toast, StatusTag, DataTable
-│   ├── home/    HeroSection, QuickActions, ProcessSteps, CTAStrip…
-│   ├── ghp/     StepsBar, VideoCard, QuizCard, CertCard  ← independent
-│   ├── apply/   ApplicationForm, Step1–4, SuccessView    ← independent
-│   └── verify/  VerifySearch
-│
-├── data/        demoData.js, quizData.js, requiredDocs.js
-├── hooks/       useToast.js, useMTVData.js, usePagination.js
-├── lib/
-│   ├── constants.js       ← app-wide constants
-│   ├── certNumber.js      ← generateCertNumber(), generateRefNumber()
-│   ├── emailService.js    ← Gmail/Nodemailer (free) – certificate + ACK emails
-│   ├── driveService.js    ← Google Drive upload (free)
-│   ├── googleSheets.js    ← Sheets read/write (free)
-│   └── utils.js           ← pure helpers
-└── styles/globals.css     ← design tokens + shared CSS
-```
-
----
-
-## Feature Details
-
-### GHP Orientation (`/ghp`) — Standalone
-
-1. **Watch** the orientation video (click "Mark as Watched")
-2. **Take** the 5-question quiz (≥70% to pass)
-3. **Claim** your certificate — enter name + email → certificate sent via Gmail
-
-The certificate is a **branded HTML email** matching the NMIS Google Slides template design (green header, gold accents, certificate number, official seal). It is completely free to send via Gmail.
-
-### Submit Application (`/apply`) — Standalone
-
-- 4-step form: Applicant Info → Vehicle Details → Documents → Review
-- Documents (PDF/JPG/PNG, max 5 MB each) are saved to your **Google Drive folder**
-- Application data is saved to **Google Sheets**
-- Acknowledgement email sent automatically to the applicant
-
-### Verify MTV (`/verify`)
-
-- Search by plate number or business name
-- URL query support: `/verify?q=ABC1234`
-- Paginated table of all accredited MTVs
-
-### Banned MTV (`/banned`)
-
-- Searchable table of banned/suspended/revoked vehicles
-
----
-
-## Deploy to Vercel (Free)
-
-```bash
-# Option A: CLI
-npx vercel --prod
-
-# Option B: GitHub
-# Push to GitHub → vercel.com → Import → Add env vars → Deploy
-```
-
-**Add these environment variables in Vercel dashboard:**
-
-```
+```txt
 NEXT_PUBLIC_DEMO_MODE=false
+
+MAINTENANCE_MODE=false
+MAINTENANCE_MESSAGE=The MTV Portal is temporarily unavailable while we perform system updates.
+MAINTENANCE_ETA=Please check back shortly.
+
 GOOGLE_SHEET_ID=...
 GOOGLE_CLIENT_ID=...
 GOOGLE_CLIENT_SECRET=...
 GOOGLE_REFRESH_TOKEN=...
 GOOGLE_DRIVE_FOLDER_ID=...
+
 GMAIL_USER=...
 GMAIL_APP_PASSWORD=...
 GMAIL_FROM_NAME=NMIS Central Luzon
+CONTACT_RECIPIENT_EMAIL=nmis.clu@da.gov.ph
 ```
 
----
+Do not commit real production credentials.
 
-## npm install Error Fix
+## Google Setup
 
-The `enoent` error was caused by a missing `jsconfig.json` for the `@/` path alias.
-This is now included in the project root. If you still see errors:
+The portal uses free Google services:
+
+| Service | Purpose |
+| --- | --- |
+| Google Sheets API | Accredited, banned, applications, GHP completions, contact messages, and downloadables |
+| Google Drive API | Uploaded application documents and admin-managed downloadable PDFs |
+| Gmail SMTP | Application acknowledgements, GHP certificates, and contact notifications |
+
+### OAuth
+
+1. Create a Google Cloud project.
+2. Enable Google Sheets API and Google Drive API.
+3. Create an OAuth 2.0 Desktop Client.
+4. Copy `client_id` and `client_secret` into `.env`.
+5. Run:
 
 ```bash
-# Make sure you are inside the project folder
-cd mtv-portal
-npm install
-npm run dev
+node get-refresh-token.js
 ```
+
+6. Copy the generated refresh token into `GOOGLE_REFRESH_TOKEN`.
+
+### Gmail App Password
+
+1. Enable 2-Step Verification on the Gmail account.
+2. Create an App Password for Mail.
+3. Put the 16-character password in `GMAIL_APP_PASSWORD`.
+
+## Google Sheets Structure
+
+Create these tabs in the spreadsheet connected to `GOOGLE_SHEET_ID`.
+
+### `Accredited`
+
+```txt
+plate | business | type | owner | expiry | status
+```
+
+### `Banned`
+
+```txt
+plate | business | owner | reason | date | status
+```
+
+### `Applications`
+
+Written automatically when an MTV application is submitted.
+
+```txt
+ref_number | timestamp | firstname | lastname | email | contact | address | province | plate | vtype | vmake | vmodel | vyear | capacity | bname | btype | baddress | drive_folder_id | status
+```
+
+The current implementation can write additional application columns after `status`; keep any added headers in the same order as the app.
+
+### `GHP_Completions`
+
+Written automatically after a user passes the GHP quiz and claims a certificate.
+
+```txt
+cert_number | timestamp | name | email | score | pct | issued_date
+```
+
+### `Contact`
+
+Written automatically when a user submits the contact form.
+
+```txt
+timestamp | name | email | phone | subject | message | status
+```
+
+### `Downloadables`
+
+Used by `/requirements` to show admin-editable PDF downloads.
+
+```txt
+title | description | file_url | type | active | order
+```
+
+Example:
+
+```txt
+MTV Application Form | Printable application form for MTV registration. | https://drive.google.com/file/d/FILE_ID/view?usp=sharing | PDF | yes | 1
+Requirements Checklist | Applicant checklist for required documents. | https://drive.google.com/file/d/FILE_ID/view?usp=sharing | PDF | yes | 2
+```
+
+Set `active` to `no` to hide an item. Change `order` to reorder the list.
+
+## Google Drive Structure
+
+Create a Drive folder for application uploads, then put its folder ID in `GOOGLE_DRIVE_FOLDER_ID`.
+
+For downloadable PDFs, create a separate folder such as:
+
+```txt
+MTV Portal Downloadables
+```
+
+Upload the PDF files there. For each file:
+
+1. Right-click the file and choose Share.
+2. Set access to `Anyone with the link`.
+3. Set role to Viewer.
+4. Copy the file link.
+5. Paste it into the `file_url` column in the `Downloadables` sheet tab.
+
+The portal converts normal Google Drive share links into download links.
+
+## Maintenance Mode
+
+The portal includes a full-screen maintenance page at:
+
+```txt
+/maintenance
+```
+
+To show it for normal website pages:
+
+```txt
+MAINTENANCE_MODE=true
+```
+
+To disable it:
+
+```txt
+MAINTENANCE_MODE=false
+```
+
+Restart the server after changing `.env`.
+
+You can customize the displayed text with:
+
+```txt
+MAINTENANCE_MESSAGE=...
+MAINTENANCE_ETA=...
+```
+
+## Office Address And Map
+
+The current office address is configured in `src/lib/constants.js`:
+
+```txt
+Diosdado Macapagal Government Center, Brgy. Maimpis, San Fernando, Pampanga
+```
+
+The contact page embeds Google Maps using `OFFICE_INFO.mapEmbedUrl`.
+
+## Main Routes
+
+| Route | Purpose |
+| --- | --- |
+| `/` | Home page |
+| `/requirements` | MTV requirements, registration guide, and PDF downloadables |
+| `/guidelines` | MTV guidelines and memorandum references |
+| `/ghp` | GHP orientation, quiz, and certificate claiming |
+| `/apply` | MTV application submission and status lookup |
+| `/verify` | Accredited MTV verification |
+| `/banned` | Banned or suspended MTV list |
+| `/contact` | Contact form, office details, FAQs, and map |
+| `/maintenance` | Maintenance/update page |
+
+## Project Structure
+
+```txt
+src/
+  app/
+    api/                  API routes
+    apply/                MTV application page
+    banned/               Banned list page
+    contact/              Contact page with map
+    ghp/                  GHP orientation page
+    guidelines/           Guidelines page
+    maintenance/          Maintenance page
+    requirements/         Requirements and downloadables page
+    verify/               MTV verification page
+  components/
+    apply/                Application form steps
+    ghp/                  Orientation, quiz, and certificate UI
+    home/                 Home page sections
+    layout/               Header and footer
+    ui/                   Shared UI components
+    verify/               Verification search UI
+  data/                   Required docs and quiz data
+  hooks/                  Shared React hooks
+  lib/                    Google, email, validation, constants, and helpers
+  styles/                 Global styles
+middleware.js             Maintenance mode routing
+```
+
+## Build
+
+```bash
+npm run build
+```
+
+## Deploy
+
+Deploy to Vercel or another Next.js host. Add all `.env` values in the hosting provider dashboard before deploying.

@@ -7,6 +7,7 @@
 
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
+import MaintenanceScreen from '@/components/maintenance/MaintenanceScreen'
 import { APP_NAME, AGENCY_NAME, REGION } from '@/lib/constants'
 import '@/styles/globals.css'
 
@@ -16,6 +17,8 @@ export const metadata = {
 }
 
 export default function RootLayout({ children }) {
+  const maintenanceEnabled = process.env.MAINTENANCE_MODE === 'true'
+
   return (
     <html lang="en">
       <head>
@@ -27,11 +30,17 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body>
-        <Header />
-        <main style={{ flex: 1 }}>
-          {children}
-        </main>
-        <Footer />
+        {maintenanceEnabled ? (
+          <MaintenanceScreen />
+        ) : (
+          <>
+            <Header />
+            <main style={{ flex: 1 }}>
+              {children}
+            </main>
+            <Footer />
+          </>
+        )}
       </body>
     </html>
   )

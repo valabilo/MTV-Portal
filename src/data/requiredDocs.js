@@ -1,43 +1,49 @@
 /**
  * data/requiredDocs.js
- * List of required documents for MTV application
+ * List of required documents for MTV application.
  */
 
 export const REQUIRED_DOCS = [
   {
-    id: "ghp_cert",
-    name: "GHP Certificate",
-    description: "Valid GHP (Good Hauling Practices) Certificate",
+    id: "application_form",
+    name: "Duly Accomplished MTV Application Form",
+    description: "Signed MTV application form.",
     required: true,
   },
   {
-    id: "or_cr",
-    name: "OR/CR",
-    description: "Official Receipt and Certificate of Registration",
+    id: "ghp_attendance",
+    name: "GHP Completion or Attendance Certificate",
+    description: "Optional certificate for owner/manager, driver/helper/pahinante.",
+    required: false,
+  },
+  {
+    id: "certificate_registration",
+    name: "Certificate of Registration (CR)",
+    description: "LTO Certificate of Registration.",
     required: true,
   },
   {
-    id: "bill_of_lading",
-    name: "Bill of Lading",
-    description: "Sample bill of lading for reference",
+    id: "official_receipt",
+    name: "Updated Official Receipt (OR)",
+    description: "Updated LTO vehicle registration receipt.",
     required: true,
   },
   {
-    id: "inspection_cert",
-    name: "Inspection Certificate",
-    description: "LTO Vehicle Inspection Certificate",
+    id: "ownership_possession",
+    name: "Proof of Ownership or Legal Possession",
+    description: "Proof of ownership or legal possession of vehicle.",
     required: true,
   },
   {
-    id: "company_permit",
-    name: "Company/Business Permit",
-    description: "Valid business/company permit",
+    id: "health_certificates",
+    name: "Health Certificates",
+    description: "Health certificates of porter and driver issued by a government physician.",
     required: true,
   },
   {
-    id: "identification",
-    name: "Valid ID",
-    description: "Government-issued identification (Driver's License, etc.)",
+    id: "vehicle_photos",
+    name: "Clear Colored Vehicle Photos",
+    description: "7x5 inch photos: front, left/right side, closed back with plate number, and inside view.",
     required: true,
   },
 ];
@@ -53,7 +59,7 @@ export function getRequiredDocsForApplication() {
 
 export function validateDocuments(uploadedDocs) {
   const requiredIds = REQUIRED_DOCS.filter((d) => d.required).map((d) => d.id);
-  const uploadedIds = Object.keys(uploadedDocs);
+  const uploadedIds = Object.keys(uploadedDocs ?? {});
 
   const missing = requiredIds.filter((id) => !uploadedIds.includes(id));
   return {

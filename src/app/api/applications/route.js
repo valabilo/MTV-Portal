@@ -1,68 +1,144 @@
 /**
  * app/api/applications/route.js
- * Handles MTV application submissions
+ * Handles MTV application submissions.
  */
 
 import { NextResponse } from "next/server";
 import { generateRefNumber } from "@/lib/refNumber";
-import { saveApplication } from "@/lib/googleSheets";
-import {
-  createApplicationFolder,
-  uploadFileToDrive,
-  base64ToBuffer,
-} from "@/lib/driveService";
+import { readSheet, saveApplication } from "@/lib/googleSheets";
+import { createApplicationFolder, uploadFileToDrive } from "@/lib/driveService";
 import { sendApplicationConfirmation } from "@/lib/sendMail";
+import {
+  APPLICATION_FIELDS,
+  safeDriveName,
+  sanitizeApplicationFields,
+  validateApplicationFields,
+  validateApplicationFiles,
+} from "@/lib/applicationSecurity";
+
+export const runtime = "nodejs";
+
+const activeSubmissions = globalThis.__mtvActiveSubmissions ?? new Set();
+globalThis.__mtvActiveSubmissions = activeSubmissions;
+
+function jsonError(error, status = 400) {
+  return NextResponse.json({ success: false, error }, { status });
+}
+
+async function fileToBuffer(file) {
+  return Buffer.from(await file.arrayBuffer());
+}
+
+function normalizeControlNo(value) {
+  return String(value || "").trim().toUpperCase();
+}
+
+function sheetValue(row, keys) {
+  for (const key of keys) {
+    if (row[key]) return row[key];
+  }
+
+  return "";
+}
+
+function isExpired(value) {
+  if (!value) return false;
+
+  const expiry = new Date(value);
+  if (Number.isNaN(expiry.getTime())) return false;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  expiry.setHours(0, 0, 0, 0);
+
+  return today > expiry;
+}
+
+async function validateOptionalGhpControlNo(controlNo) {
+  const id = normalizeControlNo(controlNo);
+  if (!id) return "";
+
+  const rows = await readSheet("Certificate Issuance");
+  const row = rows.find((item) => {
+    const rowControlNo = normalizeControlNo(
+      sheetValue(item, ["control_no", "control_number", "cert_number", "certificate_no"]),
+    );
+
+    return rowControlNo === id;
+  });
+
+  if (!row) return "The GHP certificate control number is not valid.";
+
+  const expiryDate = sheetValue(row, ["expiry_date", "valid_until", "expiration_date"]);
+  if (isExpired(expiryDate)) return "The GHP certificate control number is expired.";
+
+  return "";
+}
 
 export async function POST(request) {
+  let submissionId = "";
+
   try {
-    const body = await request.json();
+    const form = await request.formData();
+    const rawFields = {};
+    APPLICATION_FIELDS.forEach((field) => {
+      rawFields[field] = form.get(field) ?? "";
+    });
 
-    // Generate reference number
-    const refNumber = generateRefNumber();
+    const body = sanitizeApplicationFields(rawFields);
+    submissionId = body.submissionId;
 
-    // Create folder in Google Drive
-    const folderName = `MTV-${refNumber}_${body.firstname}_${body.lastname}`;
-    const folderId = await createApplicationFolder(folderName);
+    if (submissionId) {
+      if (activeSubmissions.has(submissionId)) {
+        return jsonError("This application is already being submitted. Please wait for the result.", 409);
+      }
+      activeSubmissions.add(submissionId);
+    }
 
-    // Upload documents to Drive
-    if (body.documents && typeof body.documents === "object") {
-      for (const [docId, docData] of Object.entries(body.documents)) {
-        const { buffer, mimeType } = base64ToBuffer(docData.base64);
-        const fileName = `${refNumber}_${docId}_${docData.name}`;
+    const fieldError = validateApplicationFields(body);
+    if (fieldError) return jsonError(fieldError);
 
-        await uploadFileToDrive({
-          fileName,
-          mimeType,
-          buffer,
-          folderId,
-        });
+    const ghpError = await validateOptionalGhpControlNo(body.ghpCertNumber);
+    if (ghpError) return jsonError(`${ghpError} Leave it blank or enter a valid control number.`);
+
+    const documents = {};
+    for (const [key, value] of form.entries()) {
+      if (!key.startsWith("document:")) continue;
+      const docId = key.slice("document:".length);
+      if (value && typeof value === "object" && "arrayBuffer" in value) {
+        documents[docId] = value;
       }
     }
 
-    // Save application to Google Sheets
+    const fileError = validateApplicationFiles(documents);
+    if (fileError) return jsonError(fileError);
+
+    const refNumber = generateRefNumber();
+    const folderName = safeDriveName(`MTV-${refNumber}_${body.firstname}_${body.lastname}`);
+    const folderId = await createApplicationFolder(folderName);
+
+    await Promise.all(
+      Object.entries(documents).map(async ([docId, file]) => {
+        const buffer = await fileToBuffer(file);
+        const fileName = safeDriveName(`${refNumber}_${docId}_${file.name}`);
+
+        return uploadFileToDrive({
+          fileName,
+          mimeType: file.type,
+          buffer,
+          folderId,
+        });
+      }),
+    );
+
     const applicationData = {
+      ...body,
       refNumber,
-      firstname: body.firstname,
-      lastname: body.lastname,
-      email: body.email,
-      contact: body.contact,
-      address: body.address,
-      province: body.province,
-      plate: body.plate,
-      vtype: body.vtype,
-      vmake: body.vmake,
-      vmodel: body.vmodel,
-      vyear: body.vyear,
-      capacity: body.capacity,
-      bname: body.bname,
-      btype: body.btype,
-      baddress: body.baddress,
       driveFolderId: folderId,
     };
 
     await saveApplication(applicationData);
 
-    // Send confirmation email
     let emailSent = false;
     try {
       await sendApplicationConfirmation(
@@ -73,7 +149,6 @@ export async function POST(request) {
       emailSent = true;
     } catch (emailError) {
       console.error("Email send failed:", emailError);
-      // Don't fail the application if email fails
     }
 
     return NextResponse.json(
@@ -87,12 +162,8 @@ export async function POST(request) {
     );
   } catch (error) {
     console.error("Application submission error:", error);
-    return NextResponse.json(
-      {
-        success: false,
-        error: error.message || "Failed to submit application",
-      },
-      { status: 500 },
-    );
+    return jsonError(error.message || "Failed to submit application", 500);
+  } finally {
+    if (submissionId) activeSubmissions.delete(submissionId);
   }
 }

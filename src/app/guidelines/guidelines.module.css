@@ -1,0 +1,134 @@
+.page {
+  padding: 42px 0 56px;
+}
+
+.section {
+  background: var(--white);
+  border: 1px solid var(--gray-100);
+  border-radius: 8px;
+  padding: 26px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow-sm);
+}
+
+.section h2 {
+  color: var(--green);
+  font-size: 1.2rem;
+  margin-bottom: 16px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1.1fr .9fr;
+  gap: 24px;
+  align-items: center;
+}
+
+.list {
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.list li,
+.section p {
+  color: var(--gray-700);
+  font-size: .92rem;
+}
+
+.vehicleMock {
+  border: 2px solid var(--gray-200);
+  border-radius: 8px;
+  padding: 24px 18px;
+  text-align: center;
+  background: var(--gray-50);
+}
+
+.registered {
+  display: inline-block;
+  border: 2px solid var(--red);
+  color: var(--red);
+  font-weight: 800;
+  padding: 8px 14px;
+  transform: rotate(-8deg);
+  margin: 10px 0 18px;
+  text-transform: uppercase;
+}
+
+.format {
+  display: inline-flex;
+  padding: 14px 18px;
+  border: 1px solid var(--gray-200);
+  background: var(--gray-50);
+  color: var(--red);
+  font-weight: 800;
+  letter-spacing: .5px;
+  margin: 10px 0;
+}
+
+.photoGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.photoBox {
+  min-height: 110px;
+  border: 1px dashed var(--gray-200);
+  border-radius: 8px;
+  padding: 14px;
+  background: var(--gray-50);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--gray-700);
+  font-weight: 700;
+  font-size: .86rem;
+}
+
+.memoGroups {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.memoGroup,
+.memoItem {
+  border: 1px solid var(--gray-200);
+  border-radius: 8px;
+  background: var(--gray-50);
+}
+
+.memoGroup > summary,
+.memoItem > summary {
+  cursor: pointer;
+  font-weight: 800;
+  color: var(--green-deep);
+  padding: 14px 16px;
+}
+
+.memoItems {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 14px 14px;
+}
+
+.memoItem {
+  background: var(--white);
+}
+
+.memoItem p {
+  border-top: 1px solid var(--gray-100);
+  margin: 0;
+  padding: 0 16px 14px;
+}
+
+@media (max-width: 760px) {
+  .grid,
+  .photoGrid {
+    grid-template-columns: 1fr;
+  }
+}
