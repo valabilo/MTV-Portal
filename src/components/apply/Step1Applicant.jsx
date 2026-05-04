@@ -104,7 +104,7 @@ export default function Step1Applicant({ data, onChange, onNext, validatingGhp =
             style={{ fontFamily: 'monospace', letterSpacing: '1px' }}
           />
           <span className="form-hint">
-            Don't have one yet?{' '}
+            Don&apos;t have one yet?{' '}
             <a href="/ghp" style={{ color: 'var(--green)', fontWeight: 700 }}>
               Complete GHP Orientation
             </a>

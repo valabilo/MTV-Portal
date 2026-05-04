@@ -10,7 +10,7 @@
  * complete GHP before applying here.
  */
 
-import { useMemo, useState, useTransition } from 'react'
+import { useEffect, useMemo, useState, useTransition } from 'react'
 import { useToast }       from '@/hooks/useToast'
 import { REQUIRED_DOCS }  from '@/data/requiredDocs'
 import Toast              from '@/components/ui/Toast'
@@ -21,6 +21,8 @@ import Step3Documents     from './Step3Documents'
 import Step4Review        from './Step4Review'
 import SuccessView        from './SuccessView'
 import styles             from './ApplicationForm.module.css'
+
+const DRAFT_KEY = 'mtv_application_draft_v1'
 
 const INITIAL_FORM = {
   applicationType: 'New',
@@ -47,7 +49,39 @@ export default function ApplicationForm() {
   const [optimisticMessage, setOptimisticMessage] = useState('')
   const [, startTransition] = useTransition()
 
-  const { toastState, showToast } = useToast()
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(DRAFT_KEY)
+      if (!saved) return
+      const draft = JSON.parse(saved)
+      if (draft?.formData) setFormData(prev => ({ ...prev, ...draft.formData }))
+      if (typeof draft?.step === 'number') setStep(Math.min(Math.max(draft.step, 1), 4))
+      if (typeof draft?.agree === 'boolean') setAgree(draft.agree)
+    } catch {
+      // Ignore corrupted or unavailable local draft payloads.
+    }
+  }, [])
+
+  useEffect(() => {
+    const payload = { formData, step, agree, updatedAt: Date.now() }
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(payload))
+  }, [formData, step, agree])
+
+
+  useEffect(() => {
+    const handleBeforeUnload = (event) => {
+      const hasData = Object.values(formData).some(value => String(value ?? '').trim())
+      if (!submitted && hasData) {
+        event.preventDefault()
+        event.returnValue = ''
+      }
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload)
+  }, [formData, submitted])
+
+    const { toastState, showToast } = useToast()
   const submissionId = useMemo(
     () => (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`),
     [],
@@ -138,6 +172,7 @@ export default function ApplicationForm() {
       }
       setRefNumber(json.refNumber)
       setSubmitted(true)
+      localStorage.removeItem(DRAFT_KEY)
     } catch (err) {
       showToast(err.message || 'Submission failed. Please try again.', true)
     } finally {
@@ -153,6 +188,7 @@ export default function ApplicationForm() {
     setAgree(false)
     setSubmitted(false)
     setRefNumber('')
+    localStorage.removeItem(DRAFT_KEY)
   }
 
   if (submitted) {

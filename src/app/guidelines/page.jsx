@@ -67,6 +67,7 @@ export default function GuidelinesPage() {
     <>
       <div className="page-hero">
         <div className="container">
+          <div className="page-hero-eyebrow">Policy & Compliance</div>
           <h1>MTV Guidelines</h1>
           <p>Registration, marking, compliance, and vehicle photo guidance.</p>
         </div>

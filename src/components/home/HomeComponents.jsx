@@ -7,21 +7,21 @@ import styles from "./HomeComponents.module.css";
 
 const quickActions = [
   {
-    icon: "REQ",
+    icon: "docs",
     title: "Requirements",
     desc: "Review the document checklist and registration guide before applying.",
     href: "/requirements",
     cta: "View Requirements",
   },
   {
-    icon: "GHP",
+    icon: "pig",
     title: "GHP Orientation",
     desc: "Watch the required orientation, take the exam, and claim your certificate.",
     href: "/ghp",
     cta: "Start Orientation",
   },
   {
-    icon: "MTV",
+    icon: "truck",
     title: "MTV Application",
     desc: "Submit a new MTV application or check the status of an existing one.",
     href: "/apply",
@@ -69,6 +69,13 @@ const hoursRows = [
   ["Closed", "Public holidays"],
 ];
 
+
+function ActionIcon({ type }) {
+  if (type === "truck") return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h11v8h2.8l1.2-2h3V14h1v2h-1.2a2.8 2.8 0 0 1-5.6 0H8.8a2.8 2.8 0 0 1-5.6 0H2v-2h1V6Zm3 10a1 1 0 1 0 .01 0Zm11 0a1 1 0 1 0 .01 0Z"/></svg>
+  if (type === "pig") return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 11a5 5 0 0 1 5-5h6a4 4 0 0 1 4 4v2h2v2h-2.2a4 4 0 0 1-3.8 3h-1v2h-2v-2H9v2H7v-2.3A4.5 4.5 0 0 1 3 12.2V11h2Zm4.5-.5a1 1 0 1 0 .01 0ZM14 13h3v1a1.5 1.5 0 0 1-3 0v-1Z"/></svg>
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v2H4zm0 4h16v10H4zm3 2v2h10v-2zm0 4v2h6v-2z"/></svg>
+}
+
 function SectionHeading({ label, title, text }) {
   return (
     <div className={styles.sectionHeading}>
@@ -92,7 +99,7 @@ export function QuickActions() {
         <div className={styles.quickGrid}>
           {quickActions.map((action) => (
             <a key={action.title} href={action.href} className={styles.actionCard}>
-              <span className={styles.actionIcon}>{action.icon}</span>
+              <span className={styles.actionIcon}><ActionIcon type={action.icon} /></span>
               <h3>{action.title}</h3>
               <p>{action.desc}</p>
               <span className={styles.cardLink}>{action.cta}</span>

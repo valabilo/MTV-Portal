@@ -70,8 +70,9 @@ export default function ContactPage() {
     <>
       <div className="page-hero">
         <div className="container">
-          <h1>Contact Us</h1>
-          <p>Reach out to NMIS Regional Technical Operation Center III for inquiries and assistance.</p>
+          <div className="page-hero-eyebrow">Public Assistance</div>
+          <h1>Contact NMIS RTOC III</h1>
+          <p>For application support, compliance concerns, and official inquiries, contact our regional office.</p>
         </div>
       </div>
 
@@ -116,7 +117,7 @@ export default function ContactPage() {
             </div>
 
             <div className={styles.formCard}>
-              <h3>Send a Message</h3>
+              <h3>Send an Official Inquiry</h3>
 
               <div className="form-group" style={{ marginBottom: 16 }}>
                 <label htmlFor="c_name">

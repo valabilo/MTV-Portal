@@ -24,7 +24,8 @@ export default function BannedPage() {
     <>
       <div className={styles.hero}>
         <div className="container">
-          <h1>🚫 Banned / Suspended MTV List</h1>
+          <div className="page-hero-eyebrow">Enforcement</div>
+          <h1>Banned / Suspended MTV List</h1>
           <p>Vehicles that have been banned, suspended, or revoked from operation.</p>
         </div>
       </div>
@@ -44,7 +45,7 @@ export default function BannedPage() {
           </div>
 
           <DataTable
-            title="🚫 Banned MTV Records"
+            title="Banned MTV Records"
             columns={columns}
             data={data}
             loading={loading}

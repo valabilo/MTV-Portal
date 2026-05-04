@@ -1,26 +1,8 @@
-/* components/layout/Footer.module.css */
-
-.footer {
-  background: var(--green);
-  color: rgba(255,255,255,.75);
-  padding: 18px 0;
-  font-size: .82rem;
-}
-
-.inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.links {
-  display: flex;
-  gap: 20px;
-}
-.links a {
-  color: rgba(255,255,255,.7);
-  text-decoration: none;
-}
-.links a:hover { color: var(--white); }
+.footer { background: var(--forest); color: rgba(255,255,255,.75); margin-top: auto; }
+.footerMain { padding: 52px 0 40px; border-bottom: 1px solid rgba(255,255,255,.08); }
+.footerGrid { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 48px; }
+.footerLogoWrap { width:52px;height:52px;background:rgba(255,255,255,.1);border-radius:10px;display:flex;align-items:center;justify-content:center }
+.footerLogo{width:44px;height:50px}.footerAgency{font-size:.9375rem;font-weight:700;color:#fff}.footerRegion{font-size:.8125rem;color:rgba(255,255,255,.6)}.footerAddress{font-size:.8125rem;color:rgba(255,255,255,.5)}
+.footerHeading{font-size:.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--gold-border);margin-bottom:16px}.footerLinks ul{list-style:none;display:flex;flex-direction:column;gap:10px}.footerLinks a{color:rgba(255,255,255,.68)}
+.footerBottom{padding:16px 0}.footerBottomInner{display:flex;justify-content:space-between;flex-wrap:wrap}.footerBottomLinks{display:flex;gap:8px;font-size:.75rem}
+@media(max-width:900px){.footerGrid{grid-template-columns:1fr 1fr}}@media(max-width:560px){.footerGrid{grid-template-columns:1fr}}

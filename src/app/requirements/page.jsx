@@ -126,6 +126,7 @@ export default async function RequirementsPage() {
     <>
       <div className="page-hero">
         <div className="container">
+          <div className="page-hero-eyebrow">Registration Workflow</div>
           <h1>MTV Requirements</h1>
           <p>Guide on how to register a Meat Transport Vehicle.</p>
         </div>

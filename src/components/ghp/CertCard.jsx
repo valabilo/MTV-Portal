@@ -188,7 +188,7 @@ export default function CertCard({
               />
               <span className={styles.hint}>
                 The certificate will be sent here. Check your spam folder if you
-                don't see it within 5 minutes.
+                don&apos;t see it within 5 minutes.
               </span>
             </div>
 
@@ -266,7 +266,7 @@ export default function CertCard({
 
                   <div className={styles.controlBlock}>
                     <strong>GHP-{new Date().getFullYear()}-1001</strong>
-                    <p>"Safe Meat For All"</p>
+                    <p>&quot;Safe Meat For All&quot;</p>
                     <span>NMIS is ISO 9001:2015 Certified</span>
                   </div>
                 </div>

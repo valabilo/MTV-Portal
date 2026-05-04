@@ -31,8 +31,9 @@ function VerifyContent() {
     <>
       <div className="page-hero">
         <div className="container">
-          <h1>🔍 Verify MTV</h1>
-          <p>Check the accreditation status of a Meat Transport Vehicle.</p>
+          <div className="page-hero-eyebrow">Public Verification</div>
+          <h1>Verify Meat Transport Vehicle</h1>
+          <p>Search and confirm accreditation status of registered MTV units in Central Luzon.</p>
         </div>
       </div>
 
@@ -45,7 +46,7 @@ function VerifyContent() {
           )}
           <VerifySearch data={data} showToast={showToast} initialQ={initialQ} />
           <DataTable
-            title="📋 Accredited MTVs – Central Luzon Region"
+            title="Accredited MTV Registry – Central Luzon"
             columns={columns}
             data={data}
             loading={loading}
