@@ -38,3 +38,11 @@
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+@media (max-width: 640px) {
+  .optimistic {
+    align-items: flex-start;
+    margin: 16px 16px 0;
+    padding: 12px 14px;
+  }
+}

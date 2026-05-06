@@ -10,10 +10,8 @@
   margin: 60px auto;
 }
 
-.icon { font-size: 4rem; margin-bottom: 16px; }
-
 .card h2 {
-  font-family: "Public Sans", sans-serif;
+  font-family: var(--font-public-sans), sans-serif;
   font-size: 1.8rem;
   font-weight: 800;
   color: var(--green);
@@ -36,7 +34,7 @@
 }
 .refBox p    { font-size: .85rem; color: var(--gray-500); margin-bottom: 4px; }
 .refBox span {
-  font-family: "Public Sans", sans-serif;
+  font-family: var(--font-public-sans), sans-serif;
   font-size: 1.6rem;
   font-weight: 800;
   color: var(--green);
@@ -55,4 +53,17 @@
   gap: 14px;
   justify-content: center;
   flex-wrap: wrap;
+}
+
+@media (max-width: 560px) {
+  .card {
+    margin: 36px auto;
+    padding: 32px 18px;
+  }
+
+  .refBox span {
+    font-size: 1.2rem;
+    letter-spacing: 1px;
+    overflow-wrap: anywhere;
+  }
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import StatusTag from '@/components/ui/StatusTag'
 import styles from './ApplicationStatusPanel.module.css'
@@ -118,6 +119,13 @@ export default function ApplicationStatusPanel() {
           </div>
         </div>
       )}
+
+      <div className={styles.footerAction}>
+        <Link href="/apply" className={styles.backLink}>
+          <span aria-hidden="true">←</span>
+          Back to MTV Application
+        </Link>
+      </div>
     </section>
   )
 }

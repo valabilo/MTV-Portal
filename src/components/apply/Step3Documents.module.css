@@ -45,6 +45,7 @@
 .fileItem {
   display: flex;
   align-items: center;
+  gap: 12px;
   justify-content: space-between;
   padding: 10px 14px;
   background: var(--green-pale);
@@ -81,4 +82,12 @@
   font-size: .9rem;
   cursor: pointer;
   margin-bottom: 4px;
+}
+
+@media (max-width: 560px) {
+  .fileItem,
+  .agreeLabel {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
 }

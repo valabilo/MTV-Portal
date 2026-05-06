@@ -100,7 +100,7 @@
 .processGrid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
+  gap: 28px;
 }
 
 .processStep {
@@ -111,6 +111,19 @@
   background: var(--white);
   border: 1px solid var(--gray-200);
   box-shadow: var(--shadow-sm);
+}
+
+.processStep:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  right: -35px;
+  top: 50%;
+  z-index: 2;
+  width: 42px;
+  height: 26px;
+  background: var(--green);
+  clip-path: polygon(0 28%, 58% 28%, 58% 0, 100% 50%, 58% 100%, 58% 72%, 0 72%);
+  transform: translateY(-50%);
 }
 
 .stepNumber {
@@ -322,6 +335,17 @@
     min-height: 0;
   }
 
+  .processGrid {
+    gap: 42px;
+  }
+
+  .processStep:not(:last-child)::after {
+    bottom: -34px;
+    right: 50%;
+    top: auto;
+    transform: translateX(50%) rotate(90deg);
+  }
+
   .ctaInner {
     align-items: flex-start;
     flex-direction: column;
@@ -332,6 +356,21 @@
   .section,
   .processSection {
     padding: 44px 0;
+  }
+
+  .sectionHeading {
+    margin-bottom: 22px;
+  }
+
+  .actionCard,
+  .processStep,
+  .infoCard,
+  .contactGrid > div {
+    padding: 20px;
+  }
+
+  .ctaButton {
+    width: 100%;
   }
 
   .contactRow {

@@ -9,7 +9,14 @@ import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
 import MaintenanceScreen from '@/components/maintenance/MaintenanceScreen'
 import { APP_NAME, AGENCY_NAME, REGION } from '@/lib/constants'
+import { Public_Sans } from 'next/font/google'
 import '@/styles/globals.css'
+
+const publicSans = Public_Sans({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-public-sans',
+})
 
 export const metadata = {
   title:       `${APP_NAME} – ${REGION}`,
@@ -20,15 +27,7 @@ export default function RootLayout({ children }) {
   const maintenanceEnabled = process.env.MAINTENANCE_MODE === 'true'
 
   return (
-    <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap"
-          rel="stylesheet"
-        />
-      </head>
+    <html lang="en" className={publicSans.variable}>
       <body>
         {maintenanceEnabled ? (
           <MaintenanceScreen />

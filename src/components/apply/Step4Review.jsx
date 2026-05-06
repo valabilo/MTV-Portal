@@ -28,7 +28,7 @@ export default function Step4Review({ data, files, submitting, onBack, onSubmit 
       <div className={rStyles.grid}>
         <div className={rStyles.block}>
           <h3 className={rStyles.blockTitle}>Applicant</h3>
-          <ReviewRow label="Name" value={`${data.firstname} ${data.middlename} ${data.lastname} ${data.suffix}`.trim()} />
+          <ReviewRow label="Registered Owner" value={data.registeredOwner} />
           <ReviewRow label="Email" value={data.email} />
           <ReviewRow label="Contact" value={data.contact} />
           <ReviewRow label="Address" value={data.address} />
@@ -39,7 +39,6 @@ export default function Step4Review({ data, files, submitting, onBack, onSubmit 
         <div className={rStyles.block}>
           <h3 className={rStyles.blockTitle}>Application and Vehicle</h3>
           <ReviewRow label="Application Type" value={data.applicationType} />
-          <ReviewRow label="Registered Owner" value={data.ownerName} />
           <ReviewRow label="Plate No." value={data.plate} />
           <ReviewRow label="Type" value={data.vtype} />
           <ReviewRow label="Make / Model" value={`${data.vmake} ${data.vmodel} (${data.vyear})`} />

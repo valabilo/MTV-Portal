@@ -119,6 +119,28 @@ function StepIcon({ name }) {
   return icons[name] ?? icons.requirements
 }
 
+function TruckIcon() {
+  return (
+    <svg
+      width="34"
+      height="34"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true">
+      <path d="M3 7h11v9H3z" />
+      <path d="M14 10h3.8l2.2 2.8V16h-6z" />
+      <path d="M5.5 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" />
+      <path d="M17.5 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" />
+      <path d="M7.5 17h8" />
+      <path d="M5 10h5" />
+    </svg>
+  )
+}
+
 export default async function RequirementsPage() {
   const downloadables = await getDownloadables()
 
@@ -133,7 +155,33 @@ export default async function RequirementsPage() {
 
       <main className={styles.page}>
         <div className="container">
-          <div className={styles.band}>Guide on How to Register Meat Transport Vehicle (MTV)</div>
+          <section className={styles.overview}>
+            <div>
+              <span className={styles.kicker}>Registration Guide</span>
+              <h2>Prepare the documents, inspection, payment, and final MTV certificate in one clear flow.</h2>
+              <p>
+                This page summarizes the registration steps, important reminders,
+                required documents, and downloadable forms for Meat Transport
+                Vehicle applicants.
+              </p>
+            </div>
+            <div className={styles.summaryGrid}>
+              <div>
+                <span>Process</span>
+                <strong>6 steps</strong>
+              </div>
+              <div>
+                <span>Validity</span>
+                <strong>Annual</strong>
+              </div>
+              <div>
+                <span>Final Output</span>
+                <strong>COR and sticker</strong>
+              </div>
+            </div>
+          </section>
+
+          <div className={styles.band}>Registration Flow</div>
           <section className={`${styles.panel} ${styles.guidePanel}`}>
             <h2 className={styles.guideTitle}>6 Easy Steps for MTV Registration</h2>
             <div className={styles.timeline} aria-hidden="true" />
@@ -145,6 +193,9 @@ export default async function RequirementsPage() {
             <div className={styles.stepsInfographic}>
               {STEPS.map((step, index) => (
                 <article key={step.title} className={`${styles.step} ${styles[step.theme]}`}>
+                  <span className={styles.truckMarker}>
+                    <TruckIcon />
+                  </span>
                   <span className={styles.stepIcon}>
                     <StepIcon name={step.icon} />
                   </span>

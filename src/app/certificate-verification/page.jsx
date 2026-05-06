@@ -73,6 +73,32 @@ function CertificateVerificationContent() {
 
       <div className={styles.page}>
         <div className="container">
+          <section className={styles.overview}>
+            <div>
+              <span className={styles.kicker}>Certificate Lookup</span>
+              <h2>Confirm whether a GHP certificate is recorded and still valid.</h2>
+              <p>
+                Use the certificate control number printed on the GHP
+                certificate or encoded in the QR code to verify the official
+                record.
+              </p>
+            </div>
+            <div className={styles.summaryGrid}>
+              <div>
+                <span>Input</span>
+                <strong>Control number</strong>
+              </div>
+              <div>
+                <span>Example</span>
+                <strong>GHP-2026-987</strong>
+              </div>
+              <div>
+                <span>Result</span>
+                <strong>Valid or expired</strong>
+              </div>
+            </div>
+          </section>
+
           <div className={styles.searchCard}>
             <h2>Verify Certificate</h2>
             <p>Enter the control number printed on the certificate or scan its QR code.</p>

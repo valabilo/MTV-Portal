@@ -3,13 +3,22 @@
  */
 
 import styles from "./HeroSection.module.css";
+import Image from "next/image";
+import Link from "next/link";
 
 export default function HeroSection() {
   return (
     <section className={styles.hero}>
+      <Image
+        src="/images/vehicle-photos/mtv-hero.png"
+        alt=""
+        fill
+        priority
+        sizes="100vw"
+        className={styles.heroImage}
+      />
       <div className={`container ${styles.inner}`}>
-        <div>
-          <div className={styles.badge}>Official Government Portal</div>
+        <div className={styles.copy}>
           <h1 className={styles.title}>
             MTV Portal
             <br />
@@ -23,25 +32,12 @@ export default function HeroSection() {
             application, and verify records in one organized portal.
           </p>
           <div className={styles.actions}>
-            <a href="/apply" className="btn btn-white">
+            <Link href="/apply" className="btn btn-white">
               MTV Application
-            </a>
-            <a href="/verify" className={styles.btnOutlineWhite}>
+            </Link>
+            <Link href="/verify" className={styles.btnOutlineWhite}>
               Verify MTV
-            </a>
-          </div>
-        </div>
-
-        <div className={styles.portalCard} aria-hidden="true">
-          <div className={styles.cardTopline} />
-          <div className={styles.vehicleShape}>
-            <span />
-            <span />
-          </div>
-          <div className={styles.cardRows}>
-            <span />
-            <span />
-            <span />
+            </Link>
           </div>
         </div>
       </div>

@@ -75,7 +75,7 @@ export default function ContactPage() {
         </div>
       </div>
 
-      <div style={{ padding: "40px 0" }}>
+      <div className={styles.page}>
         <div className="container">
           <div className={styles.grid}>
             <div>

@@ -17,7 +17,7 @@
   gap: 14px;
 }
 .headerText h3 {
-  font-family: "Public Sans", sans-serif;
+  font-family: var(--font-public-sans), sans-serif;
   font-size: 1.35rem; font-weight: 800; color: var(--white);
 }
 .headerText p { font-size: .85rem; color: rgba(255,255,255,.75); margin-top: 2px; }
@@ -64,4 +64,25 @@
   margin-top: 20px;
   display: flex;
   justify-content: flex-end;
+}
+
+@media (max-width: 640px) {
+  .header,
+  .body {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .action {
+    justify-content: stretch;
+  }
+
+  .action :global(.btn) {
+    width: 100%;
+  }
 }

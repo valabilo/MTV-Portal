@@ -5,14 +5,15 @@
 /* Search box */
 .box {
   background: var(--white);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-md);
+  border: 1px solid var(--gray-100);
+  border-radius: 8px;
+  box-shadow: var(--shadow-sm);
   padding: 36px 32px;
   max-width: 640px;
   margin: 0 auto 28px;
 }
 .box h2 {
-  font-family: "Public Sans", sans-serif;
+  font-family: var(--font-public-sans), sans-serif;
   font-size: 1.5rem; font-weight: 800; color: var(--green);
   margin-bottom: 6px;
 }
@@ -28,7 +29,8 @@
   text-align: center;
   padding: 28px;
   background: var(--white);
-  border-radius: var(--radius);
+  border: 1px solid var(--gray-100);
+  border-radius: 8px;
   box-shadow: var(--shadow-sm);
   max-width: 640px;
   margin: 0 auto 28px;
@@ -40,8 +42,9 @@
 /* Result card */
 .resultCard {
   background: var(--white);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-md);
+  border: 1px solid var(--gray-100);
+  border-radius: 8px;
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
   max-width: 720px;
   margin: 0 auto 28px;
@@ -52,7 +55,7 @@
   display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
 }
 .resultHeader h3 {
-  font-family: "Public Sans", sans-serif;
+  font-family: var(--font-public-sans), sans-serif;
   font-size: 1.3rem; font-weight: 800; color: var(--white); margin: 0;
 }
 .resultBody { padding: 24px; }
@@ -79,5 +82,16 @@
 .alertInactive { background: #fee2e2; color: #991b1b; }
 
 @media (max-width: 640px) {
+  .box,
+  .notFound,
+  .resultBody {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .row {
+    flex-direction: column;
+  }
+
   .resultGrid { grid-template-columns: 1fr; }
 }

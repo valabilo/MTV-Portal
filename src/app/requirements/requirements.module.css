@@ -1,254 +1,248 @@
 .page {
-  padding: 42px 0 56px;
+  padding: 42px 0 62px;
 }
 
-.band {
-  background: var(--green);
-  color: var(--white);
-  padding: 18px 22px;
-  font-weight: 800;
-  font-size: 1.12rem;
-  border-radius: 8px 8px 0 0;
-}
-
-.panel {
+.overview {
   background: var(--white);
   border: 1px solid var(--gray-100);
-  border-top: 0;
-  border-radius: 0 0 8px 8px;
-  padding: 26px;
-  margin-bottom: 30px;
+  border-radius: 8px;
   box-shadow: var(--shadow-sm);
+  display: grid;
+  gap: 24px;
+  grid-template-columns: minmax(0, 1.25fr) minmax(280px, .75fr);
+  margin-bottom: 18px;
+  padding: 28px;
 }
 
-.guidePanel {
-  position: relative;
-  overflow: hidden;
-  background: #f4faf4;
-  padding: 34px 28px 36px;
-}
-
-.guideTitle {
-  position: relative;
-  z-index: 2;
-  margin: 0 0 64px;
-  text-align: center;
-  color: #103760;
-  font-size: clamp(1.45rem, 3vw, 2.35rem);
-  font-weight: 900;
-  letter-spacing: 0;
+.kicker,
+.sectionHeading span {
+  color: var(--gold);
+  display: block;
+  font-size: .75rem;
+  font-weight: 800;
+  letter-spacing: .8px;
+  margin-bottom: 8px;
   text-transform: uppercase;
 }
 
-.timeline {
-  position: absolute;
-  z-index: 1;
-  top: 133px;
-  left: 54px;
-  right: 54px;
-  height: 6px;
-  background: #103760;
-  box-shadow: 0 2px 0 rgba(16, 55, 96, .18);
+.overview h2 {
+  color: var(--green-deep);
+  font-family: var(--font-public-sans), sans-serif;
+  font-size: clamp(1.45rem, 2.4vw, 2rem);
+  line-height: 1.25;
+  margin-bottom: 12px;
+}
+
+.overview p,
+.sectionHeading p,
+.step p,
+.notes li,
+.requirements li,
+.downloadCard p,
+.emptyDownloadables {
+  color: var(--gray-700);
+  font-size: .94rem;
+  line-height: 1.65;
+}
+
+.summaryGrid {
+  display: grid;
+  gap: 10px;
+}
+
+.summaryGrid div {
+  background: var(--green-pale);
+  border: 1px solid rgba(26, 92, 50, .14);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.summaryGrid span {
+  color: var(--gray-500);
+  display: block;
+  font-size: .78rem;
+  font-weight: 800;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+}
+
+.summaryGrid strong {
+  color: var(--green-deep);
+  display: block;
+  font-size: 1.05rem;
+}
+
+.band {
+  color: var(--gold);
+  font-size: .75rem;
+  font-weight: 800;
+  letter-spacing: .8px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+}
+
+.panel {
+  border-top: 1px solid var(--gray-200);
+  margin-bottom: 0;
+  padding: 34px 0;
+}
+
+.guidePanel {
+  overflow: hidden;
+  position: relative;
+}
+
+.guideTitle {
+  color: var(--green);
+  font-family: var(--font-public-sans), sans-serif;
+  font-size: clamp(1.25rem, 2vw, 1.65rem);
+  margin: 0 0 8px;
 }
 
 .truckBackdrop {
+  display: none;
+}
+
+.timeline {
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, .7) 0 22px,
+      transparent 22px 42px
+    ),
+    linear-gradient(90deg, #1f2937, #374151);
+  border-radius: 999px;
+  height: 10px;
+  left: 22px;
   position: absolute;
-  right: 18px;
-  bottom: 18px;
-  width: 58%;
-  height: 155px;
-  opacity: .22;
-  pointer-events: none;
-}
-
-.truckBackdrop::before {
-  content: "";
-  position: absolute;
-  right: 80px;
-  bottom: 46px;
-  width: 72%;
-  height: 92px;
-  border-radius: 18px 18px 8px 8px;
-  background: #7ea876;
-}
-
-.truckCab {
-  position: absolute;
-  right: 0;
-  bottom: 46px;
-  width: 28%;
-  height: 78px;
-  border-radius: 16px 8px 8px 0;
-  background: #7ea876;
-}
-
-.truckWheelOne,
-.truckWheelTwo {
-  position: absolute;
-  bottom: 0;
-  width: 90px;
-  height: 90px;
-  border-radius: 50%;
-  border: 24px solid #7ea876;
-  background: #f4faf4;
-}
-
-.truckWheelOne {
-  right: 34%;
-}
-
-.truckWheelTwo {
-  right: 7%;
+  right: 22px;
+  top: 112px;
 }
 
 .stepsInfographic {
-  position: relative;
-  z-index: 2;
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 16px;
+  gap: 18px;
+  grid-template-columns: repeat(6, minmax(145px, 1fr));
+  margin-top: 56px;
+  position: relative;
+  z-index: 1;
 }
 
 .step {
-  --step-color: #5b9ee6;
+  --step-color: var(--green);
+  --step-soft: var(--green-pale);
+  background: var(--white);
+  border: 1px solid var(--gray-100);
+  border-top: 5px solid var(--step-color);
+  border-radius: 8px;
+  box-shadow: var(--shadow-sm);
+  min-height: 250px;
+  padding: 48px 16px 18px;
   position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   text-align: center;
-  padding-top: 70px;
+}
+
+.step:nth-child(even) {
+  margin-top: 34px;
+}
+
+.truckMarker {
+  align-items: center;
+  background: var(--step-color);
+  border: 4px solid var(--gray-50);
+  border-radius: 999px;
+  box-shadow: 0 8px 18px rgba(18, 58, 40, .18);
+  color: var(--white);
+  display: inline-flex;
+  height: 58px;
+  justify-content: center;
+  left: 50%;
+  position: absolute;
+  top: -31px;
+  transform: translateX(-50%);
+  width: 58px;
 }
 
 .stepIcon {
-  position: absolute;
-  top: -68px;
-  left: 50%;
-  z-index: 3;
-  transform: translateX(-50%);
-  display: inline-flex;
   align-items: center;
+  background: var(--step-soft);
+  border: 1px solid rgba(26, 92, 50, .12);
+  border-radius: 8px;
+  color: var(--step-color);
+  display: inline-flex;
+  height: 48px;
   justify-content: center;
-  width: 88px;
-  height: 88px;
-  border-radius: 50%;
-  background: var(--white);
-  color: #103760;
-  border: 12px solid var(--step-color);
-  box-shadow: 12px 16px 18px rgba(17, 47, 73, .2);
-}
-
-.stepIcon::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: -29px;
-  width: 0;
-  height: 0;
-  transform: translateX(-50%);
-  border-left: 13px solid transparent;
-  border-right: 13px solid transparent;
-  border-top: 22px solid var(--step-color);
+  margin-bottom: 14px;
+  width: 48px;
 }
 
 .stepIcon svg {
-  width: 38px;
-  height: 38px;
+  height: 28px;
+  width: 28px;
 }
 
 .stepNumber {
-  order: 5;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: calc(100% - 10px);
-  min-height: 48px;
-  margin-top: 18px;
-  border-radius: 999px;
-  background: var(--step-color);
-  color: var(--white);
+  color: var(--gold);
+  display: block;
+  font-size: .76rem;
   font-weight: 900;
-  font-size: 1.05rem;
-  box-shadow: 0 5px 12px rgba(17, 47, 73, .12);
+  letter-spacing: .7px;
+  margin-top: 14px;
+  text-transform: uppercase;
 }
 
 .step h3 {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  min-height: 72px;
-  margin: 0;
-  padding: 18px 12px 0;
-  border-left: 2px solid var(--step-color);
-  border-right: 2px solid var(--step-color);
-  border-top: 2px solid var(--step-color);
-  background: var(--white);
-  color: #0d2f55;
-  font-size: clamp(.9rem, 1vw, 1.05rem);
-  line-height: 1.18;
-  font-weight: 900;
+  color: var(--green-deep);
+  font-family: var(--font-public-sans), sans-serif;
+  font-size: 1rem;
+  margin: 0 0 8px;
 }
 
-.step p {
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  width: 100%;
-  min-height: 156px;
-  margin: 0;
-  padding: 8px 12px 18px;
-  border-left: 2px solid var(--step-color);
-  border-right: 2px solid var(--step-color);
-  border-bottom: 2px solid var(--step-color);
-  background: var(--white);
-  color: #5d646b;
-  font-size: .9rem;
-  line-height: 1.35;
-}
-
-.step::after {
-  content: "";
-  order: 4;
-  width: 1px;
-  height: 18px;
-  border-left: 2px dashed rgba(16, 55, 96, .2);
-}
-
-.blue { --step-color: #5b9ee6; }
-.teal { --step-color: #4bc8ac; }
-.green { --step-color: #afd985; }
-.yellow { --step-color: #ffc85e; }
-.red { --step-color: #ef4f62; }
-.navy { --step-color: #355f90; }
-
-.panel li,
-.panel p {
-  color: var(--gray-700);
-  font-size: .92rem;
-}
+.blue { --step-color: var(--blue); --step-soft: var(--blue-lt); }
+.teal { --step-color: #287d72; --step-soft: #dff3ef; }
+.green { --step-color: var(--green); --step-soft: var(--green-pale); }
+.yellow { --step-color: var(--gold); --step-soft: #fff7dc; }
+.red { --step-color: var(--red); --step-soft: var(--red-lt); }
+.navy { --step-color: #355f90; --step-soft: #e1ecf8; }
 
 .notes,
 .requirements {
-  padding-left: 22px;
-  display: flex;
-  flex-direction: column;
+  background: var(--white);
+  border: 1px solid var(--gray-100);
+  border-radius: 8px;
+  box-shadow: var(--shadow-sm);
+  display: grid;
   gap: 10px;
+  margin: 18px 0 0;
+  padding: 22px 22px 22px 42px;
+}
+
+.requirements {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  list-style-position: outside;
+}
+
+.requirements li {
+  padding-right: 14px;
 }
 
 .downloadGrid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-top: 18px;
 }
 
 .downloadCard {
-  display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  border: 1px solid var(--gray-200);
+  background: var(--white);
+  border: 1px solid var(--gray-100);
+  border-left: 4px solid var(--green);
   border-radius: 8px;
-  background: var(--gray-50);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  gap: 18px;
+  justify-content: space-between;
   padding: 18px;
 }
 
@@ -258,35 +252,27 @@
   margin: 8px 0 6px;
 }
 
-.downloadCard p {
-  margin: 0;
-}
-
 .fileType {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 48px;
-  height: 24px;
+  background: var(--green-pale);
   border-radius: 999px;
-  background: var(--white);
-  border: 1px solid var(--gray-200);
-  color: var(--green-deep);
+  color: var(--green);
+  display: inline-flex;
   font-size: .72rem;
   font-weight: 800;
+  padding: 5px 10px;
 }
 
 .downloadButton {
-  flex: 0 0 auto;
-  display: inline-flex;
   align-items: center;
+  background: var(--green);
+  border-radius: 8px;
+  color: var(--white);
+  display: inline-flex;
+  flex: 0 0 auto;
+  font-weight: 800;
   justify-content: center;
   min-height: 40px;
   padding: 0 16px;
-  border-radius: 8px;
-  background: var(--green);
-  color: var(--white);
-  font-weight: 800;
   text-decoration: none;
 }
 
@@ -295,53 +281,72 @@
 }
 
 .emptyDownloadables {
-  margin: 0;
-  padding: 18px;
+  background: var(--white);
   border: 1px dashed var(--gray-200);
   border-radius: 8px;
-  background: var(--gray-50);
+  margin-top: 18px;
+  padding: 18px;
   text-align: center;
 }
 
 @media (max-width: 980px) {
-  .guideTitle {
-    margin-bottom: 38px;
+  .overview,
+  .requirements,
+  .downloadGrid {
+    grid-template-columns: 1fr;
   }
 
-  .timeline,
-  .truckBackdrop {
-    display: none;
+  .timeline {
+    bottom: 34px;
+    height: auto;
+    left: 48px;
+    right: auto;
+    top: 118px;
+    width: 10px;
   }
 
   .stepsInfographic {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 28px 16px;
+    grid-template-columns: 1fr;
+    margin-left: 58px;
   }
 
   .step {
-    padding-top: 0;
+    min-height: 0;
+    padding: 22px 18px 22px 54px;
+    text-align: left;
   }
 
-  .stepIcon {
-    position: relative;
-    top: auto;
-    left: auto;
+  .step:nth-child(even) {
+    margin-top: 0;
+  }
+
+  .truckMarker {
+    left: -58px;
+    top: 22px;
     transform: none;
-    margin-bottom: -18px;
   }
 
-  .downloadGrid { grid-template-columns: 1fr; }
+  .summaryGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 640px) {
-  .guidePanel {
-    padding: 28px 18px;
+  .overview,
+  .summaryGrid {
+    grid-template-columns: 1fr;
   }
 
-  .stepsInfographic { grid-template-columns: 1fr; }
+  .page {
+    padding: 32px 0 48px;
+  }
 
-  .step p {
-    min-height: 0;
+  .overview,
+  .notes,
+  .requirements,
+  .downloadCard {
+    padding-left: 18px;
+    padding-right: 18px;
   }
 
   .downloadCard {

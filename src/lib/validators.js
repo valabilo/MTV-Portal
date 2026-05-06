@@ -32,7 +32,7 @@ export function validateCapacity(capacity) {
 }
 
 export function validateAddress(address) {
-  return address && address.trim().length >= 5;
+  return Boolean(address && address.trim());
 }
 
 export function validateName(name) {

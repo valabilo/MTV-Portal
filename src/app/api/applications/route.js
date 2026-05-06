@@ -114,7 +114,7 @@ export async function POST(request) {
     if (fileError) return jsonError(fileError);
 
     const refNumber = generateRefNumber();
-    const folderName = safeDriveName(`MTV-${refNumber}_${body.firstname}_${body.lastname}`);
+    const folderName = safeDriveName(`MTV-${refNumber}_${body.registeredOwner}`);
     const folderId = await createApplicationFolder(folderName);
 
     await Promise.all(
@@ -144,7 +144,7 @@ export async function POST(request) {
       await sendApplicationConfirmation(
         body.email,
         refNumber,
-        `${body.firstname} ${body.lastname}`.trim(),
+        body.registeredOwner,
       );
       emailSent = true;
     } catch (emailError) {

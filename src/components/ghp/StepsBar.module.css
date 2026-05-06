@@ -58,6 +58,12 @@
 .connectorDone { background: var(--green); }
 
 @media (max-width: 768px) {
+  .bar {
+    justify-content: flex-start;
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
+
   .connector { width: 40px; }
   .label     { display: none; }
 }

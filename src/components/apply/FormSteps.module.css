@@ -7,7 +7,7 @@
 }
 
 .sectionTitle {
-  font-family: "Public Sans", sans-serif;
+  font-family: var(--font-public-sans), sans-serif;
   font-size: 1.2rem;
   font-weight: 800;
   color: var(--green);

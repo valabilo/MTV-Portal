@@ -1,24 +1,44 @@
 /* components/home/HeroSection.module.css */
 
 .hero {
-  background: linear-gradient(135deg, var(--green-deep) 0%, var(--green) 58%, #2a7a46 100%);
   position: relative;
   overflow: hidden;
 }
+
+.heroImage {
+  object-fit: cover;
+  object-position: center;
+  z-index: 0;
+}
+
 .hero::before {
   content: "";
-  position: absolute; inset: 0;
-  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(10, 32, 22, .9) 0%, rgba(10, 32, 22, .72) 34%, rgba(10, 32, 22, .28) 68%, rgba(10, 32, 22, .16) 100%),
+    linear-gradient(180deg, rgba(18, 58, 40, .22), rgba(18, 58, 40, .48)),
+    linear-gradient(180deg, rgba(255,255,255,.08), transparent 28%, rgba(0,0,0,.18));
+  z-index: 1;
 }
 
 .inner {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 420px;
-  gap: 40px;
-  align-items: center;
-  padding: 76px 0 70px;
-  position: relative; z-index: 1;
+  display: flex;
+  min-height: 620px;
+  padding: 86px 0 78px;
+  position: relative;
+  z-index: 1;
 }
+
+/* .copy {
+  background: rgba(10, 32, 22, .24);
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 8px;
+  box-shadow: 0 24px 60px rgba(0,0,0,.2);
+  max-width: 560px;
+  padding: 28px 30px;
+  backdrop-filter: blur(4px);
+} */
 
 .badge {
   display: inline-flex;
@@ -34,7 +54,7 @@
 }
 
 .title {
-  font-family: "Public Sans", sans-serif;
+  font-family: var(--font-public-sans), sans-serif;
   font-size: clamp(2.2rem, 5vw, 3.4rem);
   font-weight: 900;
   color: var(--white);
@@ -47,11 +67,11 @@
 .subtitle {
   font-size: 1.1rem;
   font-weight: 600;
-  color: var(--gold-lt);
+  color: rgba(255,255,255,.92);
   margin-bottom: 14px;
 }
 
-.inner > div > p {
+.copy > p {
   color: rgba(255,255,255,.82);
   font-size: .97rem;
   line-height: 1.7;
@@ -67,7 +87,7 @@
   gap: 8px;
   padding: 10px 22px;
   border-radius: var(--radius);
-  font-family: "Public Sans", sans-serif;
+  font-family: var(--font-public-sans), sans-serif;
   font-weight: 700;
   font-size: .93rem;
   cursor: pointer;
@@ -79,82 +99,50 @@
 }
 .btnOutlineWhite:hover { background: rgba(255,255,255,.1); }
 
-.portalCard {
-  position: relative;
-  min-height: 330px;
-  border-radius: 8px;
-  background: rgba(255,255,255,.12);
-  border: 1px solid rgba(255,255,255,.22);
-  box-shadow: 0 24px 60px rgba(0,0,0,.18);
-  backdrop-filter: blur(4px);
-  padding: 28px;
-}
-
-.cardTopline {
-  width: 58%;
-  height: 12px;
-  border-radius: 999px;
-  background: rgba(255,255,255,.7);
-  margin-bottom: 28px;
-}
-
-.vehicleShape {
-  position: relative;
-  height: 132px;
-  border-radius: 8px;
-  background: rgba(255,255,255,.82);
-  margin-bottom: 26px;
-}
-
-.vehicleShape::before {
-  content: "";
-  position: absolute;
-  right: 22px;
-  top: 34px;
-  width: 112px;
-  height: 48px;
-  border-radius: 8px 8px 4px 4px;
-  background: var(--green);
-}
-
-.vehicleShape span {
-  position: absolute;
-  bottom: -18px;
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  border: 10px solid var(--green-deep);
-  background: var(--white);
-}
-
-.vehicleShape span:first-child {
-  left: 54px;
-}
-
-.vehicleShape span:last-child {
-  right: 54px;
-}
-
-.cardRows {
-  display: grid;
-  gap: 12px;
-}
-
-.cardRows span {
-  height: 12px;
-  border-radius: 999px;
-  background: rgba(255,255,255,.45);
-}
-
-.cardRows span:nth-child(2) {
-  width: 82%;
-}
-
-.cardRows span:nth-child(3) {
-  width: 62%;
-}
-
 @media (max-width: 768px) {
-  .inner { grid-template-columns: 1fr; }
-  .portalCard { display: none; }
+  .inner {
+    min-height: 520px;
+    padding: 52px 0 46px;
+  }
+
+  .title {
+    font-size: clamp(1.9rem, 10vw, 2.8rem);
+  }
+
+  .subtitle {
+    font-size: 1rem;
+  }
+
+  .copy {
+    max-width: 100%;
+    padding: 34px 28px;
+  }
+
+  .copy > p {
+    max-width: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .actions {
+    flex-direction: column;
+  }
+
+  .actions a {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .heroImage {
+    object-position: 72% center;
+  }
+
+  .inner {
+    min-height: 460px;
+    padding: 38px 0 34px;
+  }
+
+  .copy {
+    padding: 30px 22px;
+  }
 }

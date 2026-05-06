@@ -1,20 +1,9 @@
-/**
- * components/apply/SuccessView.jsx
- *
- * Shown after a successful application submission.
- *
- * Props:
- *   refNumber {string}     The generated MTV reference number
- *   onReset   {()=>void}   Resets the form so user can submit another
- */
-
-import styles from './SuccessView.module.css'
+import styles from "./SuccessView.module.css";
 
 export default function SuccessView({ refNumber, onReset }) {
   return (
     <div className={styles.card}>
-      <div className={styles.icon}>✅</div>
-      <h2>Application Submitted!</h2>
+      <h2>Application Submitted</h2>
       <p>
         Your MTV accreditation application has been successfully submitted.
         Please keep your reference number for tracking purposes.
@@ -31,9 +20,15 @@ export default function SuccessView({ refNumber, onReset }) {
       </p>
 
       <div className={styles.actions}>
-        <a href={`/apply?ref=${encodeURIComponent(refNumber)}#application-status`} className="btn btn-primary">Track Status</a>
-        <button className="btn btn-outline" onClick={onReset}>Submit Another</button>
+        <a
+          href={`/application-status?ref=${encodeURIComponent(refNumber)}`}
+          className="btn btn-primary">
+          Track Status
+        </a>
+        <button className="btn btn-outline" onClick={onReset}>
+          Submit Another
+        </button>
       </div>
     </div>
-  )
+  );
 }

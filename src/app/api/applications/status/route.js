@@ -23,7 +23,7 @@ export async function GET(request) {
     const rows = await readSheet("Applications");
 
     // Sheet columns (0-based after header normalisation by readSheet):
-    // ref_number | timestamp | firstname | lastname | email | contact |
+    // ref_number | timestamp | application_type | registered_owner | email | contact |
     // address | province | plate | vtype | vmake | vmodel | vyear |
     // capacity | bname | btype | baddress | drive_folder_id | status
     const row = rows.find(
@@ -49,7 +49,7 @@ export async function GET(request) {
       success: true,
       application: {
         reference: row.ref_number,
-        applicant: `${row.firstname || ""} ${row.lastname || ""}`.trim(),
+        applicant: row.registered_owner || row.registeredowner || "",
         email: row.email,
         contact: row.contact,
         business: row.bname,

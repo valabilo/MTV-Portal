@@ -93,10 +93,10 @@ plate | business | owner | reason | date | status
 Written automatically when an MTV application is submitted.
 
 ```txt
-ref_number | timestamp | firstname | lastname | email | contact | address | province | plate | vtype | vmake | vmodel | vyear | capacity | bname | btype | baddress | drive_folder_id | status
+ref_number | timestamp | application_type | registered_owner | email | contact | address | region | province | ghp_cert_number | plate | vtype | vmake | vmodel | vyear | capacity | bname | btype | baddress | drive_folder_id | status | vcolor | vengine | vchassis | cr_number | or_number | lto_client_id | body_type | fuel_type | cooling | gross_weight | net_capacity | material | meat_establishment | intended_route
 ```
 
-The current implementation can write additional application columns after `status`; keep any added headers in the same order as the app.
+The app automatically keeps these headers on the `Applications` tab before saving a new application.
 
 ### `GHP_Completions`
 

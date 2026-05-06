@@ -4,6 +4,7 @@
 
 import { OFFICE_INFO } from "@/lib/constants";
 import styles from "./HomeComponents.module.css";
+import Link from "next/link";
 
 const quickActions = [
   {
@@ -91,12 +92,15 @@ export function QuickActions() {
 
         <div className={styles.quickGrid}>
           {quickActions.map((action) => (
-            <a key={action.title} href={action.href} className={styles.actionCard}>
+            <Link
+              key={action.title}
+              href={action.href}
+              className={styles.actionCard}>
               <span className={styles.actionIcon}>{action.icon}</span>
               <h3>{action.title}</h3>
               <p>{action.desc}</p>
               <span className={styles.cardLink}>{action.cta}</span>
-            </a>
+            </Link>
           ))}
         </div>
       </div>
@@ -137,9 +141,9 @@ export function CTAStrip() {
           <h2>Submit or track your MTV application online.</h2>
           <p>Use the application page for new submissions and reference number lookups.</p>
         </div>
-        <a href="/apply" className={styles.ctaButton}>
+        <Link href="/apply" className={styles.ctaButton}>
           Open Application
-        </a>
+        </Link>
       </div>
     </section>
   );
@@ -160,9 +164,9 @@ export function InfoCards() {
                 <li key={item}>{item}</li>
               ))}
             </ul>
-            <a href="/requirements" className={styles.secondaryLink}>
+            <Link href="/requirements" className={styles.secondaryLink}>
               Review requirements
-            </a>
+            </Link>
           </article>
 
           <article className={styles.infoCard}>
@@ -174,9 +178,9 @@ export function InfoCards() {
               Check the list of banned, suspended, or revoked MTV units before
               transacting.
             </p>
-            <a href="/banned" className={styles.dangerLink}>
+            <Link href="/banned" className={styles.dangerLink}>
               View banned list
-            </a>
+            </Link>
           </article>
 
           <article className={styles.infoCard}>
@@ -188,9 +192,9 @@ export function InfoCards() {
               Send a message to NMIS RTOC III or review common questions about
               MTV registration.
             </p>
-            <a href="/contact" className={styles.secondaryLink}>
+            <Link href="/contact" className={styles.secondaryLink}>
               Visit contact page
-            </a>
+            </Link>
           </article>
         </div>
       </div>

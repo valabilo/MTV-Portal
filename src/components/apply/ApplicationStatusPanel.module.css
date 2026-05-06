@@ -20,7 +20,7 @@
 
 .header h2 {
   color: var(--green);
-  font-family: "Public Sans", sans-serif;
+  font-family: var(--font-public-sans), sans-serif;
   font-size: 1.5rem;
   font-weight: 800;
   margin-bottom: 6px;
@@ -33,11 +33,35 @@
 
 .searchCard {
   background: var(--white);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-md);
+  border: 1px solid var(--gray-100);
+  border-radius: 8px;
+  box-shadow: var(--shadow-sm);
   margin: 0 auto 22px;
   max-width: 680px;
   padding: 24px;
+}
+
+.footerAction {
+  display: flex;
+  justify-content: flex-end;
+  margin: 24px auto 0;
+  max-width: 680px;
+}
+
+.backLink {
+  align-items: center;
+  border-bottom: 1px solid currentColor;
+  color: var(--green);
+  display: inline-flex;
+  font-size: .9rem;
+  font-weight: 800;
+  gap: 6px;
+  padding-bottom: 2px;
+  text-decoration: none;
+}
+
+.backLink:hover {
+  color: var(--green-deep);
 }
 
 .searchRow {
@@ -73,8 +97,9 @@
 
 .resultCard {
   background: var(--white);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-md);
+  border: 1px solid var(--gray-100);
+  border-radius: 8px;
+  box-shadow: var(--shadow-sm);
   margin: 0 auto;
   max-width: 840px;
   overflow: hidden;
@@ -102,7 +127,7 @@
 }
 
 .resultHeader h3 {
-  font-family: "Public Sans", sans-serif;
+  font-family: var(--font-public-sans), sans-serif;
   font-size: 1.45rem;
   font-weight: 800;
 }

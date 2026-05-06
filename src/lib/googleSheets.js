@@ -30,6 +30,23 @@ function getSpreadsheetId() {
   return spreadsheetId;
 }
 
+function quoteSheetName(sheetName) {
+  return `'${String(sheetName).replace(/'/g, "''")}'`;
+}
+
+function columnLabel(index) {
+  let label = "";
+  let current = index;
+
+  while (current > 0) {
+    const remainder = (current - 1) % 26;
+    label = String.fromCharCode(65 + remainder) + label;
+    current = Math.floor((current - 1) / 26);
+  }
+
+  return label;
+}
+
 // ── Generic helpers ───────────────────────────────────────────────
 /**
  * Reads all rows from a sheet tab and returns them as objects.
@@ -77,6 +94,49 @@ export async function appendRow(sheetName, rowData) {
   });
 }
 
+export async function ensureHeaders(sheetName, expectedHeaders) {
+  const sheets = getSheetsClient();
+  const spreadsheetId = getSpreadsheetId();
+  const sheetRef = quoteSheetName(sheetName);
+  const response = await sheets.spreadsheets.values.get({
+    spreadsheetId,
+    range: `${sheetRef}!1:1`,
+  });
+  const currentHeaders = response.data.values?.[0] ?? [];
+  const legacyApplicationHeaders = new Set([
+    "firstname",
+    "lastname",
+    "middlename",
+    "suffix",
+    "owner_name_on_cr",
+    "operator_name",
+    "business_tin",
+  ]);
+  const normalizedExpectedHeaders = new Set(expectedHeaders);
+  const customHeaders = currentHeaders.filter(
+    (header) =>
+      header &&
+      !normalizedExpectedHeaders.has(header) &&
+      !legacyApplicationHeaders.has(header),
+  );
+  const nextHeaders = [...expectedHeaders, ...customHeaders];
+
+  const needsUpdate =
+    currentHeaders.length < expectedHeaders.length ||
+    expectedHeaders.some((header, index) => currentHeaders[index] !== header);
+
+  if (!needsUpdate) return;
+
+  await sheets.spreadsheets.values.update({
+    spreadsheetId,
+    range: `${sheetRef}!A1:${columnLabel(nextHeaders.length)}1`,
+    valueInputOption: "RAW",
+    requestBody: {
+      values: [nextHeaders],
+    },
+  });
+}
+
 // ── Domain-specific helpers ───────────────────────────────────────
 export async function getAccreditedList() {
   return readSheet("Accredited");
@@ -107,16 +167,58 @@ export async function saveGHPCompletion(data) {
  * Saves a new MTV application.
  * Sheet tab name: Applications
  */
+const APPLICATION_HEADERS = [
+  "ref_number",
+  "timestamp",
+  "application_type",
+  "registered_owner",
+  "email",
+  "contact",
+  "address",
+  "region",
+  "province",
+  "ghp_cert_number",
+  "plate",
+  "vtype",
+  "vmake",
+  "vmodel",
+  "vyear",
+  "capacity",
+  "bname",
+  "btype",
+  "baddress",
+  "drive_folder_id",
+  "status",
+  "vcolor",
+  "vengine",
+  "vchassis",
+  "cr_number",
+  "or_number",
+  "lto_client_id",
+  "body_type",
+  "fuel_type",
+  "cooling",
+  "gross_weight",
+  "net_capacity",
+  "material",
+  "meat_establishment",
+  "intended_route",
+];
+
 export async function saveApplication(data) {
+  await ensureHeaders("Applications", APPLICATION_HEADERS);
+
   return appendRow("Applications", [
     data.refNumber,
     new Date().toISOString(),
-    data.firstname,
-    data.lastname,
+    data.applicationType ?? "",
+    data.registeredOwner,
     data.email,
     data.contact,
     data.address,
+    data.region ?? "",
     data.province ?? "",
+    data.ghpCertNumber ?? "",
     data.plate,
     data.vtype,
     data.vmake,
@@ -128,14 +230,6 @@ export async function saveApplication(data) {
     data.baddress || data.intendedRoute || "",
     data.driveFolderId ?? "",
     "Pending",
-    data.applicationType ?? "",
-    data.middlename ?? "",
-    data.suffix ?? "",
-    data.region ?? "",
-    data.ghpCertNumber ?? "",
-    data.ownerName ?? "",
-    data.operatorName ?? "",
-    data.businessTin ?? "",
     data.vcolor ?? "",
     data.vengine ?? "",
     data.vchassis ?? "",

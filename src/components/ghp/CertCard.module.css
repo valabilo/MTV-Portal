@@ -20,7 +20,7 @@
   font-size: 1.4rem; flex-shrink: 0;
 }
 .headerText h3 {
-  font-family: "Public Sans", sans-serif;
+  font-family: var(--font-public-sans), sans-serif;
   font-size: 1.35rem; font-weight: 800; color: var(--white);
 }
 .headerText p { font-size: .85rem; color: rgba(255,255,255,.75); margin-top: 2px; }
@@ -53,7 +53,7 @@
   padding: 10px 14px;
   border: 1.5px solid var(--gray-200);
   border-radius: 8px;
-  font-family: "Public Sans", sans-serif;
+  font-family: var(--font-public-sans), sans-serif;
   font-size: .92rem;
   color: var(--gray-900);
   transition: var(--transition);
@@ -140,7 +140,7 @@
 .certPreviewBody h4 {
   margin: 14px 0 18px;
   color: #111;
-  font-family: "Public Sans", sans-serif;
+  font-family: var(--font-public-sans), sans-serif;
   font-size: clamp(1.35rem, 4vw, 2rem);
   font-weight: 900;
   letter-spacing: .18em;
@@ -167,7 +167,7 @@
 .certCopy p {
   margin: 12px 0 0;
   color: #111;
-  font-family: "Public Sans", sans-serif;
+  font-family: var(--font-public-sans), sans-serif;
   font-size: .9rem;
   line-height: 1.45;
 }
@@ -209,7 +209,7 @@
 .qrBlock p {
   margin: 0;
   color: #666;
-  font-family: "Public Sans", sans-serif;
+  font-family: var(--font-public-sans), sans-serif;
   font-size: .75rem;
 }
 
@@ -229,7 +229,7 @@
 .signatureBlock strong {
   display: block;
   color: #111;
-  font-family: "Public Sans", sans-serif;
+  font-family: var(--font-public-sans), sans-serif;
   font-size: .98rem;
   font-weight: 900;
 }
@@ -237,7 +237,7 @@
 .signatureBlock p {
   margin: 2px 0 0;
   color: #111;
-  font-family: "Public Sans", sans-serif;
+  font-family: var(--font-public-sans), sans-serif;
   font-size: .72rem;
 }
 
@@ -263,7 +263,7 @@
 
 .controlBlock span {
   color: #555;
-  font-family: "Public Sans", sans-serif;
+  font-family: var(--font-public-sans), sans-serif;
   font-size: .62rem;
 }
 
@@ -314,7 +314,7 @@
 }
 .successIcon { font-size: 3.5rem; margin-bottom: 12px; }
 .successBox h4 {
-  font-family: "Public Sans", sans-serif;
+  font-family: var(--font-public-sans), sans-serif;
   font-size: 1.6rem; font-weight: 800; color: var(--green);
   margin-bottom: 8px;
 }
@@ -350,4 +350,30 @@
   line-height: 1.6;
   margin-top: 8px;
   text-align: left;
+}
+
+@media (max-width: 560px) {
+  .header,
+  .body {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .header {
+    align-items: flex-start;
+  }
+
+  .actions {
+    justify-content: stretch;
+  }
+
+  .actions :global(.btn) {
+    width: 100%;
+  }
+
+  .certRow {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 2px;
+  }
 }
