@@ -94,15 +94,63 @@ export async function appendRow(sheetName, rowData) {
   });
 }
 
+/**
+ * Ensures the header row of a sheet tab matches expectedHeaders.
+ * If the sheet tab does not exist, it is created first.
+ * If headers are missing or out of order, they are written/updated.
+ * @param {string} sheetName
+ * @param {string[]} expectedHeaders
+ */
 export async function ensureHeaders(sheetName, expectedHeaders) {
   const sheets = getSheetsClient();
   const spreadsheetId = getSpreadsheetId();
   const sheetRef = quoteSheetName(sheetName);
-  const response = await sheets.spreadsheets.values.get({
-    spreadsheetId,
-    range: `${sheetRef}!1:1`,
-  });
+
+  // Try to read the first row; if the sheet doesn't exist yet, create it.
+  let response;
+  try {
+    response = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: `${sheetRef}!1:1`,
+    });
+  } catch (err) {
+    // "Unable to parse range" means the sheet tab doesn't exist yet.
+    if (
+      err.message?.includes("Unable to parse range") ||
+      err.message?.includes("Requested entity was not found")
+    ) {
+      // Create the missing sheet tab.
+      await sheets.spreadsheets.batchUpdate({
+        spreadsheetId,
+        requestBody: {
+          requests: [
+            {
+              addSheet: {
+                properties: { title: sheetName },
+              },
+            },
+          ],
+        },
+      });
+
+      // Write headers to the freshly created sheet and return.
+      await sheets.spreadsheets.values.update({
+        spreadsheetId,
+        range: `${sheetRef}!A1:${columnLabel(expectedHeaders.length)}1`,
+        valueInputOption: "RAW",
+        requestBody: {
+          values: [expectedHeaders],
+        },
+      });
+      return;
+    }
+
+    // Re-throw any other unexpected error.
+    throw err;
+  }
+
   const currentHeaders = response.data.values?.[0] ?? [];
+
   const legacyApplicationHeaders = new Set([
     "firstname",
     "lastname",
@@ -118,6 +166,7 @@ export async function ensureHeaders(sheetName, expectedHeaders) {
     "net_capacity",
     "lto_client_id",
   ]);
+
   const normalizedExpectedHeaders = new Set(expectedHeaders);
   const customHeaders = currentHeaders.filter(
     (header) =>
@@ -173,7 +222,7 @@ export async function saveGHPCompletion(data) {
  * Saves a new MTV application.
  * Sheet tab name: Applications
  *
- * Header row (26 columns):
+ * Header row (30 columns):
  * ref_number | timestamp | application_type | registered_owner | email | contact |
  * address | region | province | ghp_cert_number | plate | vtype | vmake | vmodel |
  * vyear | capacity | bname | btype | baddress | drive_folder_id | status |
