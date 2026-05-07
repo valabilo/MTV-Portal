@@ -27,11 +27,6 @@ import { NextResponse } from "next/server";
 export const runtime = "nodejs";
 
 // Allow up to 4.5 MB (Vercel's hard limit is 4.5 MB for serverless)
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
 
 export async function POST(request) {
   try {
