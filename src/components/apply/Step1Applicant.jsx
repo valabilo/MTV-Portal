@@ -11,12 +11,6 @@ import Link from "next/link";
 
 const APPLICATION_TYPES = ["New", "Renewal", "Amendment"];
 
-const REGIONS = [
-  { value: "III", label: "Region III - Central Luzon" },
-  { value: "NCR", label: "NCR - National Capital Region" },
-  { value: "IV-A", label: "Region IV-A - CALABARZON" },
-];
-
 const PROVINCES = [
   "Pampanga",
   "Bulacan",
@@ -91,15 +85,15 @@ export default function Step1Applicant({
           </label>
           <select
             id="region"
-            value={data.region}
-            onChange={(e) => onChange("region", e.target.value)}>
-            <option value="">-- Select Region --</option>
-            {REGIONS.map((r) => (
-              <option key={r.value} value={r.value}>
-                {r.label}
-              </option>
-            ))}
+            value="III"
+            disabled
+            onChange={() => {}}
+            style={{ opacity: 0.75, cursor: "not-allowed" }}>
+            <option value="III">Region III - Central Luzon</option>
           </select>
+          <span className="form-hint">
+            This portal is for NMIS RTOC III — Region III only.
+          </span>
         </div>
         <div className="form-group">
           <label htmlFor="province">

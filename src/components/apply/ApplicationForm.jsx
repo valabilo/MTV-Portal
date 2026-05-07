@@ -14,6 +14,11 @@
  *   3. For each 4 MB chunk:
  *        POST /api/drive/upload-chunk  → chunk forwarded server→Google (no CORS)
  *   4. POST /api/applications         → JSON metadata only (tiny, no files)
+ *
+ * VALIDATION ORDER:
+ *   All field, document, and GHP certificate validations run BEFORE any API
+ *   call (ref number generation, folder creation, or file upload). Nothing
+ *   is sent to the server until every check passes.
  */
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
@@ -67,6 +72,49 @@ const INITIAL_FORM = {
 
 const DRAFT_STORAGE_KEY = "mtv-application-draft-v1";
 
+// ─── Human-readable field labels used in toast messages ──────────────────────
+const FIELD_LABELS = {
+  registeredOwner: "Registered Owner",
+  email: "Email Address",
+  contact: "Contact Number",
+  address: "Complete Address",
+  region: "Region",
+  province: "Province",
+  applicationType: "Application Type",
+  plate: "Plate Number",
+  vtype: "Vehicle Type",
+  vmake: "Vehicle Make",
+  vmodel: "Vehicle Model",
+  vyear: "Vehicle Year",
+  capacity: "Load Capacity",
+  meatEstablishment: "Meat Establishment",
+  intendedRoute: "Intended Route",
+};
+
+// Required fields per step — used both in per-step navigation and final pre-submit check.
+const REQUIRED_BY_STEP = {
+  1: [
+    "applicationType",
+    "registeredOwner",
+    "email",
+    "contact",
+    "address",
+    "region",
+    "province",
+  ],
+  2: [
+    "plate",
+    "vtype",
+    "vmake",
+    "vmodel",
+    "vyear",
+    "capacity",
+    "meatEstablishment",
+    "intendedRoute",
+  ],
+  3: [], // documents + agreement are checked separately
+};
+
 // ─── Draft helpers ────────────────────────────────────────────────────────────
 function normalizeDraftForm(savedForm) {
   if (!savedForm || typeof savedForm !== "object") return INITIAL_FORM;
@@ -104,8 +152,8 @@ function clearSavedDraft() {
 // ─── Chunked upload helpers ───────────────────────────────────────────────────
 
 /**
- * Step 1: Ask our API to create a resumable upload session with Google Drive.
- * Returns the uploadUrl (opaque session URL from Google).
+ * Ask our server to open a resumable upload session with Google Drive.
+ * Returns the opaque session URL issued by Google.
  */
 async function initUpload({ fileName, mimeType, folderId, fileSize }) {
   const res = await fetch("/api/drive/init-upload", {
@@ -120,8 +168,8 @@ async function initUpload({ fileName, mimeType, folderId, fileSize }) {
 }
 
 /**
- * Step 2: Send one chunk to our proxy route.
- * Our server then forwards it to Google (no CORS issue).
+ * Proxy one chunk through our server route to Google Drive.
+ * Avoids CORS and keeps each request under Vercel's 4.5 MB limit.
  */
 async function sendChunk({
   uploadUrl,
@@ -146,27 +194,30 @@ async function sendChunk({
   });
 
   const json = await res.json();
-  if (!json.success) throw new Error(json.error || `Chunk upload failed`);
+  if (!json.success) throw new Error(json.error || "Chunk upload failed");
   return json; // { done, fileId? }
 }
 
 /**
  * Full chunked upload for one file.
- * Splits the file into CHUNK_SIZE pieces and uploads each through our proxy.
+ * File name pattern: <refNumber>_<docId>_<originalName>
+ *   e.g. MTV-2026-000001_ghp_attendance_cert.pdf
  */
 async function uploadFileInChunks({
   file,
   folderId,
-  refPrefix,
+  refNumber,
   docId,
   onProgress,
 }) {
   const totalSize = file.size;
-  const fileName = `${refPrefix}_${docId}_${file.name}`
+
+  // Build a sanitised file name that identifies the ref, document type, and original name.
+  const fileName = `${refNumber}_${docId}_${file.name}`
     .replace(/[\\/:*?"<>|]/g, "-")
     .slice(0, 200);
 
-  // 1. Initialise the resumable session
+  // 1. Open the resumable session on the server
   const uploadUrl = await initUpload({
     fileName,
     mimeType: file.type || "application/octet-stream",
@@ -177,17 +228,17 @@ async function uploadFileInChunks({
   let offset = 0;
   let fileId = null;
 
-  // 2. Send chunks one by one
+  // 2. Send each chunk through our proxy
   while (offset < totalSize) {
     const end = Math.min(offset + CHUNK_SIZE, totalSize);
-    const chunk = file.slice(offset, end); // Blob slice — no memory copy
+    const chunk = file.slice(offset, end); // Blob slice — zero copy
     const isLast = end === totalSize;
 
     const result = await sendChunk({
       uploadUrl,
       chunk,
       rangeStart: offset,
-      rangeEnd: end - 1, // Google range is inclusive
+      rangeEnd: end - 1, // Google's Content-Range is inclusive on the end
       totalSize,
       isLast,
     });
@@ -231,7 +282,7 @@ export default function ApplicationForm() {
     [],
   );
 
-  // Load draft
+  // Load draft on mount
   useEffect(() => {
     const draft = getSavedDraft();
     if (draft) {
@@ -242,7 +293,7 @@ export default function ApplicationForm() {
     setDraftReady(true);
   }, []);
 
-  // Auto-save draft
+  // Auto-save draft after every relevant state change
   useEffect(() => {
     if (!draftReady || submitted) return;
     const t = window.setTimeout(() => {
@@ -257,7 +308,7 @@ export default function ApplicationForm() {
           }),
         );
       } catch {
-        /* ignore */
+        /* ignore quota errors */
       }
     }, 250);
     return () => window.clearTimeout(t);
@@ -267,87 +318,51 @@ export default function ApplicationForm() {
     setFormData((prev) => ({ ...prev, [key]: value }));
   }
 
-  async function goToStep(target, validate = false) {
-    if (validate && !runValidation(step)) return;
-    if (validate && step === 1) {
-      const ok = await validateOptionalGhpControlNo();
-      if (!ok) return;
-    }
-    setStep(target);
-    requestAnimationFrame(() => {
-      const top = formRef.current?.getBoundingClientRect().top + window.scrollY;
-      if (top)
-        window.scrollTo({ top: Math.max(top - 130, 0), behavior: "smooth" });
-    });
-  }
+  // ─── Validation helpers ─────────────────────────────────────────────────────
 
-  function runValidation(currentStep) {
-    const requiredByStep = {
-      1: [
-        "applicationType",
-        "registeredOwner",
-        "email",
-        "contact",
-        "address",
-        "region",
-        "province",
-      ],
-      2: [
-        "plate",
-        "vtype",
-        "vmake",
-        "vmodel",
-        "vyear",
-        "capacity",
-        "meatEstablishment",
-        "intendedRoute",
-      ],
-      3: [],
-    };
-    const fieldLabels = {
-      registeredOwner: "Registered Owner",
-      email: "Email Address",
-      contact: "Contact Number",
-      address: "Complete Address",
-      region: "Region",
-      province: "Province",
-      applicationType: "Application Type",
-      plate: "Plate Number",
-      vtype: "Vehicle Type",
-      vmake: "Vehicle Make",
-      vmodel: "Vehicle Model",
-      vyear: "Vehicle Year",
-      capacity: "Load Capacity",
-      meatEstablishment: "Meat Establishment",
-      intendedRoute: "Intended Route",
-    };
-
-    const missing = (requiredByStep[currentStep] || []).filter(
+  /**
+   * Validates required fields for a given step.
+   * Returns true if valid, shows a toast and returns false if not.
+   */
+  function runFieldValidation(targetStep) {
+    const missing = (REQUIRED_BY_STEP[targetStep] || []).filter(
       (k) => !formData[k]?.trim(),
     );
     if (missing.length) {
       showToast(
-        `Please fill in: ${missing.map((k) => fieldLabels[k] || k).join(", ")}.`,
+        `Please fill in: ${missing.map((k) => FIELD_LABELS[k] || k).join(", ")}.`,
         true,
       );
       return false;
     }
-    if (currentStep === 3) {
-      const missingDocs = REQUIRED_DOCS.filter(
-        (d) => d.required && !files[d.id],
+    return true;
+  }
+
+  /**
+   * Validates step 3: all required documents attached + agreement ticked.
+   * Returns true if valid, shows a toast and returns false if not.
+   */
+  function runDocumentValidation() {
+    const missingDocs = REQUIRED_DOCS.filter((d) => d.required && !files[d.id]);
+    if (missingDocs.length) {
+      showToast(
+        `Please upload all required documents: ${missingDocs.map((d) => d.name).join(", ")}.`,
+        true,
       );
-      if (missingDocs.length) {
-        showToast("Please upload all required documents.", true);
-        return false;
-      }
-      if (!agree) {
-        showToast("Please agree to the certification.", true);
-        return false;
-      }
+      return false;
+    }
+    if (!agree) {
+      showToast("Please agree to the certification.", true);
+      return false;
     }
     return true;
   }
 
+  /**
+   * Validates the optional GHP certificate number against the Sheets database.
+   * Empty value is always valid (the field is optional).
+   * Returns true if valid (or empty), shows a toast and returns false if invalid.
+   */
   async function validateOptionalGhpControlNo() {
     const controlNo = formData.ghpCertNumber?.trim();
     if (!controlNo) return true;
@@ -360,7 +375,7 @@ export default function ApplicationForm() {
       const json = await res.json();
       if (!res.ok || !json.success || json.certificate?.isExpired) {
         showToast(
-          "The GHP certificate number is not valid. Leave blank or enter a valid one.",
+          "The GHP certificate number is not valid or has expired. Leave blank or enter a valid one.",
           true,
         );
         return false;
@@ -368,7 +383,7 @@ export default function ApplicationForm() {
       return true;
     } catch {
       showToast(
-        "Unable to validate GHP certificate. Try again or leave blank.",
+        "Unable to validate GHP certificate. Try again or leave the field blank.",
         true,
       );
       return false;
@@ -377,16 +392,53 @@ export default function ApplicationForm() {
     }
   }
 
+  // ─── Navigation ─────────────────────────────────────────────────────────────
+
+  /**
+   * Advances to a target step, optionally running field validation first.
+   * For step 1 → 2 the GHP cert is also validated when provided.
+   */
+  async function goToStep(target, validate = false) {
+    if (validate) {
+      if (!runFieldValidation(step)) return;
+      // Step 3 requires document + agreement check
+      if (step === 3 && !runDocumentValidation()) return;
+      // Validate optional GHP cert on step 1 before advancing
+      if (step === 1) {
+        const ok = await validateOptionalGhpControlNo();
+        if (!ok) return;
+      }
+    }
+    setStep(target);
+    requestAnimationFrame(() => {
+      const top = formRef.current?.getBoundingClientRect().top + window.scrollY;
+      if (top)
+        window.scrollTo({ top: Math.max(top - 130, 0), behavior: "smooth" });
+    });
+  }
+
+  // ─── Final submission ────────────────────────────────────────────────────────
+
   async function handleSubmit() {
     if (submitting) return;
-    const validGhp = await validateOptionalGhpControlNo();
-    if (!validGhp) return;
+
+    // ── Pre-flight validation — ALL checks run BEFORE any API call ──────────
+    // Step 1 fields (applicant info)
+    if (!runFieldValidation(1)) return;
+    // Step 2 fields (vehicle info)
+    if (!runFieldValidation(2)) return;
+    // Step 3: required documents + agreement
+    if (!runDocumentValidation()) return;
+    // Optional GHP certificate number (async — hits the database)
+    const ghpValid = await validateOptionalGhpControlNo();
+    if (!ghpValid) return;
+    // ── All validations passed — safe to start uploading ────────────────────
 
     setSubmitting(true);
     setUploadProgress({});
 
     try {
-      // ── Phase 0: Generate reference number ─────────────────────────────────
+      // ── Phase 0: Generate sequential reference number ─────────────────────
       startTransition(() =>
         setOptimisticMessage("Generating your application reference number…"),
       );
@@ -398,29 +450,26 @@ export default function ApplicationForm() {
       const refJson = await refRes.json();
       if (!refJson.success)
         throw new Error(refJson.error || "Failed to generate reference number");
-      const generatedRefNumber = refJson.refNumber;
+      const generatedRefNumber = refJson.refNumber; // e.g. "MTV-2026-000001"
 
-      // ── Phase 1: Create Drive folder ──────────────────────────────────────
+      // ── Phase 1: Create Drive folder (named with ref number only) ─────────
+      // Folder name = ref number only, e.g. "MTV-2026-000001"
       startTransition(() =>
         setOptimisticMessage("Creating your application folder…"),
       );
 
-      const folderName =
-        `${generatedRefNumber}_${formData.registeredOwner}_${formData.plate}`
-          .replace(/[\\/:*?"<>|]/g, "-")
-          .slice(0, 120);
-
       const folderRes = await fetch("/api/drive/create-folder", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ folderName }),
+        body: JSON.stringify({ folderName: generatedRefNumber }),
       });
       const folderJson = await folderRes.json();
       if (!folderJson.success)
         throw new Error(folderJson.error || "Failed to create Drive folder");
       const folderId = folderJson.folderId;
 
-      // ── Phase 2: Chunked upload for each file (proxied through our API) ───
+      // ── Phase 2: Upload each file in chunks (proxied through our API) ─────
+      // File name pattern: <refNumber>_<docId>_<originalFileName>
       const docEntries = Object.entries(files);
       const uploadedFiles = [];
 
@@ -439,7 +488,7 @@ export default function ApplicationForm() {
         const result = await uploadFileInChunks({
           file,
           folderId,
-          refPrefix: folderName,
+          refNumber: generatedRefNumber, // used as the file name prefix
           docId,
           onProgress: (pct) =>
             setUploadProgress((prev) => ({ ...prev, [docId]: pct })),
@@ -448,7 +497,7 @@ export default function ApplicationForm() {
         uploadedFiles.push(result);
       }
 
-      // ── Phase 3: Submit metadata only (no files, no size limit) ──────────
+      // ── Phase 3: Save metadata to Sheets + send emails (no binary data) ───
       startTransition(() =>
         setOptimisticMessage("Saving your application record…"),
       );
@@ -499,7 +548,7 @@ export default function ApplicationForm() {
   if (submitted)
     return <SuccessView refNumber={refNumber} onReset={handleReset} />;
 
-  // Calculate weighted overall progress based on file sizes
+  // ─── Weighted upload progress ───────────────────────────────────────────────
   const docEntries = Object.entries(files);
   let totalSize = 0;
   let uploadedSize = 0;

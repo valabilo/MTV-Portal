@@ -2,132 +2,114 @@
  * app/api/generate-ref-number/route.js
  *
  * POST /api/generate-ref-number
- * Generates the next sequential reference number in format MTV-YYYY-XXXXXX
- * Manages a counter in Google Sheets to ensure sequential numbering.
  *
- * Sheet tab name: RefNumber_Counter
- * Columns: year | next_sequence
+ * Generates the next sequential MTV reference number: MTV-YYYY-XXXXXX
+ * Persists a per-year counter in the "RefNumber_Counter" Google Sheet tab.
  *
- * Returns: { success: true, refNumber: "MTV-2026-000001" }
+ * Sheet structure (auto-created if absent):
+ *   Header row  →  year | next_sequence
+ *   Data row    →  2026 | 3            (means MTV-2026-000003 was last issued)
+ *
+ * Root bug that caused duplicates:
+ *   The old code called appendRow() on first use WITHOUT first writing a
+ *   header row. On the second call, readSheet() treated that data row as
+ *   the header and returned an empty array, so lastSequence was always 0
+ *   and every call produced MTV-YYYY-000001.
+ *
+ * Fix:
+ *   Always call ensureHeaders() before reading so the header row is
+ *   guaranteed to exist. Then read → increment → write in one clear flow.
  */
 
 import { NextResponse } from "next/server";
-import { generateSequentialRefNumber } from "@/lib/refNumber";
 import { readSheet, appendRow, ensureHeaders } from "@/lib/googleSheets";
 import { google } from "googleapis";
 
+// ── Sheets client ─────────────────────────────────────────────────────────────
 function getSheetsClient() {
   const oauth2Client = new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
     process.env.GOOGLE_REDIRECT_URI || "urn:ietf:wg:oauth:2.0:oob",
   );
-
   oauth2Client.setCredentials({
     refresh_token: process.env.GOOGLE_REFRESH_TOKEN,
   });
-
   return google.sheets({ version: "v4", auth: oauth2Client });
 }
 
 function getSpreadsheetId() {
-  const spreadsheetId = process.env.GOOGLE_SHEET_ID?.trim();
-  if (!spreadsheetId) {
-    throw new Error("Missing GOOGLE_SHEET_ID in environment variables.");
-  }
-  return spreadsheetId;
+  const id = process.env.GOOGLE_SHEET_ID?.trim();
+  if (!id) throw new Error("Missing GOOGLE_SHEET_ID in environment variables.");
+  return id;
 }
 
-async function getOrCreateCounter(year) {
-  try {
-    const rows = await readSheet("RefNumber_Counter");
+const COUNTER_SHEET = "RefNumber_Counter";
+const COUNTER_HEADERS = ["year", "next_sequence"];
 
-    // Find the row for this year
-    const yearRow = rows.find((r) => String(r.year).trim() === String(year));
+// ── Core counter logic ────────────────────────────────────────────────────────
+/**
+ * Reads the current counter for `year`, increments it, writes it back, and
+ * returns the new sequence number (1-based integer).
+ *
+ * Guarantees:
+ *  - Header row is written before any data is read.
+ *  - The data row is updated in-place after the first call (no accumulation
+ *    of duplicate rows for the same year).
+ */
+async function getNextSequence(year) {
+  const sheets = getSheetsClient();
+  const spreadsheetId = getSpreadsheetId();
 
-    if (yearRow) {
-      return {
-        lastSequence: parseInt(yearRow.next_sequence || "0", 10),
-        rowIndex: rows.indexOf(yearRow) + 2, // +2 because sheet has header and is 1-indexed
-      };
-    }
+  // Step 1: Guarantee the header row exists.
+  // ensureHeaders() is a no-op when headers already match — safe to call every time.
+  await ensureHeaders(COUNTER_SHEET, COUNTER_HEADERS);
 
-    // Year not found, return 0 and we'll create a new row
-    return { lastSequence: 0, rowIndex: null };
-  } catch (error) {
-    // Sheet might not exist yet, return 0
-    console.warn(
-      "RefNumber_Counter sheet not found, will create:",
-      error.message,
-    );
-    return { lastSequence: 0, rowIndex: null };
+  // Step 2: Read existing data rows (header row is skipped by readSheet).
+  const rows = await readSheet(COUNTER_SHEET);
+
+  // Step 3: Look for a row belonging to the current year.
+  const yearStr = String(year);
+  const rowIndex = rows.findIndex(
+    (r) => String(r.year ?? "").trim() === yearStr,
+  );
+
+  if (rowIndex === -1) {
+    // ── First reference number for this year ──────────────────────────────
+    // Append a new data row with sequence = 1.
+    await appendRow(COUNTER_SHEET, [year, 1]);
+    return 1;
   }
+
+  // ── Subsequent reference numbers ─────────────────────────────────────────
+  const lastSequence = parseInt(rows[rowIndex].next_sequence ?? "0", 10) || 0;
+  const nextSequence = lastSequence + 1;
+
+  // Sheet row number: +1 because readSheet skips the header, +1 for 1-based index.
+  const sheetRowNumber = rowIndex + 2;
+
+  await sheets.spreadsheets.values.update({
+    spreadsheetId,
+    range: `${COUNTER_SHEET}!A${sheetRowNumber}:B${sheetRowNumber}`,
+    valueInputOption: "RAW",
+    requestBody: {
+      values: [[year, nextSequence]],
+    },
+  });
+
+  return nextSequence;
 }
 
-async function updateCounter(year, newSequence, rowIndex) {
-  try {
-    const sheets = getSheetsClient();
-    const spreadsheetId = getSpreadsheetId();
-
-    if (rowIndex) {
-      // Update existing row
-      await sheets.spreadsheets.values.update({
-        spreadsheetId,
-        range: `RefNumber_Counter!A${rowIndex}:B${rowIndex}`,
-        valueInputOption: "RAW",
-        requestBody: {
-          values: [[year, newSequence]],
-        },
-      });
-    } else {
-      // Create new row - append directly (appendRow will create sheet/headers if needed)
-      try {
-        await appendRow("RefNumber_Counter", [year, newSequence]);
-      } catch (appendError) {
-        // If append fails (sheet might not exist), try to ensure headers first
-        console.warn(
-          "First append to RefNumber_Counter failed, attempting to create headers:",
-          appendError.message,
-        );
-        try {
-          await ensureHeaders("RefNumber_Counter", ["year", "next_sequence"]);
-          await appendRow("RefNumber_Counter", [year, newSequence]);
-        } catch (ensureError) {
-          console.warn(
-            "Could not ensure headers for RefNumber_Counter:",
-            ensureError.message,
-          );
-          // Continue anyway - the sequential number was already generated
-        }
-      }
-    }
-  } catch (error) {
-    console.error("Failed to update RefNumber_Counter:", error);
-    // Continue anyway - the sequential number was already generated
-  }
-}
-
-export async function POST(request) {
+// ── Route handler ─────────────────────────────────────────────────────────────
+export async function POST() {
   try {
     const year = new Date().getFullYear();
 
-    // Get current counter for this year
-    const { lastSequence, rowIndex } = await getOrCreateCounter(year);
+    const sequence = await getNextSequence(year);
+    const paddedSequence = String(sequence).padStart(6, "0");
+    const refNumber = `MTV-${year}-${paddedSequence}`;
 
-    // Generate next sequential number
-    const refNumber = generateSequentialRefNumber(lastSequence);
-
-    // Update counter in sheet
-    const newSequence = lastSequence + 1;
-    await updateCounter(year, newSequence, rowIndex);
-
-    return NextResponse.json(
-      {
-        success: true,
-        refNumber,
-      },
-      { status: 200 },
-    );
+    return NextResponse.json({ success: true, refNumber }, { status: 200 });
   } catch (error) {
     console.error("Generate ref number error:", error);
     return NextResponse.json(
