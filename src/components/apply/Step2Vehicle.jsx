@@ -39,7 +39,15 @@ export default function Step2Vehicle({ data, onChange, onBack, onNext }) {
           <input
             placeholder="ABC 1234"
             style={{ textTransform: "uppercase" }}
+            maxLength="20"
             {...f("plate")}
+            onChange={(e) => {
+              // Remove special characters and normalize
+              const value = e.target.value
+                .toUpperCase()
+                .replace(/[^A-Z0-9\s-]/g, ""); // Keep letters, numbers, spaces, hyphens
+              onChange("plate", value);
+            }}
           />
         </div>
         <div className="form-group">

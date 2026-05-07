@@ -386,13 +386,27 @@ export default function ApplicationForm() {
     setUploadProgress({});
 
     try {
+      // ── Phase 0: Generate reference number ─────────────────────────────────
+      startTransition(() =>
+        setOptimisticMessage("Generating your application reference number…"),
+      );
+
+      const refRes = await fetch("/api/generate-ref-number", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      const refJson = await refRes.json();
+      if (!refJson.success)
+        throw new Error(refJson.error || "Failed to generate reference number");
+      const generatedRefNumber = refJson.refNumber;
+
       // ── Phase 1: Create Drive folder ──────────────────────────────────────
       startTransition(() =>
         setOptimisticMessage("Creating your application folder…"),
       );
 
       const folderName =
-        `MTV-PENDING_${formData.registeredOwner}_${formData.plate}`
+        `${generatedRefNumber}_${formData.registeredOwner}_${formData.plate}`
           .replace(/[\\/:*?"<>|]/g, "-")
           .slice(0, 120);
 
@@ -446,6 +460,7 @@ export default function ApplicationForm() {
           submissionId,
           ...formData,
           folderId,
+          refNumber: generatedRefNumber,
           uploadedFiles,
         }),
       });
@@ -484,11 +499,20 @@ export default function ApplicationForm() {
   if (submitted)
     return <SuccessView refNumber={refNumber} onReset={handleReset} />;
 
-  // Overall progress across all files
-  const progressVals = Object.values(uploadProgress);
-  const overallProgress = progressVals.length
-    ? Math.round(progressVals.reduce((s, p) => s + p, 0) / progressVals.length)
-    : 0;
+  // Calculate weighted overall progress based on file sizes
+  const docEntries = Object.entries(files);
+  let totalSize = 0;
+  let uploadedSize = 0;
+
+  docEntries.forEach(([docId, file]) => {
+    const fileSize = file.size || 0;
+    const fileProgress = uploadProgress[docId] || 0;
+    totalSize += fileSize;
+    uploadedSize += (fileSize * fileProgress) / 100;
+  });
+
+  const overallProgress =
+    totalSize > 0 ? Math.round((uploadedSize / totalSize) * 100) : 0;
 
   return (
     <>
@@ -501,7 +525,7 @@ export default function ApplicationForm() {
             <div style={{ flex: 1, minWidth: 0 }}>
               <strong>Submitting your application</strong>
               <p>{optimisticMessage}</p>
-              {progressVals.length > 0 && (
+              {totalSize > 0 && (
                 <div className={styles.progressBarWrap}>
                   <div
                     className={styles.progressBarFill}

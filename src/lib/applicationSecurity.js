@@ -85,7 +85,9 @@ export function validateApplicationFields(data) {
   if (!validatePhoneNumber(data.contact))
     return "Invalid Philippine mobile number.";
   if (!validateAddress(data.address)) return "Invalid address.";
-  if (!validatePlateNumber(data.plate)) return "Invalid plate number.";
+  if (!validatePlateNumber(data.plate)) {
+    return `Invalid plate number. Please enter a valid plate (e.g., ABC 1234). Got: "${data.plate}"`;
+  }
   if (!validateYear(data.vyear)) return "Invalid vehicle year.";
   if (!validateCapacity(data.capacity)) return "Invalid load capacity.";
 

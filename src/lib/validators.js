@@ -16,7 +16,14 @@ export function validatePhoneNumber(phone) {
 
 export function validatePlateNumber(plate) {
   // Flexible plate validation - allows various formats
-  const plate_clean = plate.replace(/\s/g, "");
+  // Trim and convert to uppercase for consistent validation
+  const plate_clean = String(plate || "")
+    .trim()
+    .toUpperCase()
+    .replace(/\s/g, ""); // Remove all whitespace
+
+  // Accept plates between 4-10 characters (after removing spaces)
+  // Allows formats like: ABC1234, ABC 1234, ABC-1234, etc.
   return plate_clean.length >= 4 && plate_clean.length <= 10;
 }
 

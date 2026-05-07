@@ -12,7 +12,6 @@
  */
 
 import { NextResponse } from "next/server";
-import { generateRefNumber } from "@/lib/refNumber";
 import { saveApplication } from "@/lib/googleSheets";
 import {
   sendApplicationConfirmation,
@@ -66,7 +65,13 @@ export async function POST(request) {
       ? body.uploadedFiles
       : [];
 
-    const refNumber = generateRefNumber();
+    // Get refNumber from client (generated sequentially before folder creation)
+    const refNumber = String(body.refNumber || "").trim();
+    if (!refNumber) {
+      return jsonError(
+        "Missing refNumber. Reference number must be generated first.",
+      );
+    }
 
     const applicationData = {
       ...sanitized,
