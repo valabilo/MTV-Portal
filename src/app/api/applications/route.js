@@ -1,22 +1,26 @@
 /**
  * app/api/applications/route.js
+ *
  * Handles MTV application submissions.
+ *
+ * NEW FLOW (bypasses Vercel 4.5MB payload limit):
+ *   1. Browser calls POST /api/drive/create-folder  → gets folderId
+ *   2. For each file, browser calls POST /api/drive/upload-url → gets resumable URL
+ *   3. Browser uploads each file DIRECTLY to Google Drive via the resumable URL
+ *   4. Browser calls POST /api/applications with JSON metadata + folderId + fileIds
+ *      (no binary data — tiny payload, no Vercel size limit hit)
  */
 
 import { NextResponse } from "next/server";
 import { generateRefNumber } from "@/lib/refNumber";
-import { readSheet, saveApplication } from "@/lib/googleSheets";
-import { createApplicationFolder, uploadFileToDrive } from "@/lib/driveService";
+import { saveApplication } from "@/lib/googleSheets";
 import {
   sendApplicationConfirmation,
   sendApplicationNotificationToNMIS,
 } from "@/lib/sendMail";
 import {
-  APPLICATION_FIELDS,
-  safeDriveName,
   sanitizeApplicationFields,
   validateApplicationFields,
-  validateApplicationFiles,
 } from "@/lib/applicationSecurity";
 
 export const runtime = "nodejs";
@@ -28,128 +32,44 @@ function jsonError(error, status = 400) {
   return NextResponse.json({ success: false, error }, { status });
 }
 
-async function fileToBuffer(file) {
-  return Buffer.from(await file.arrayBuffer());
-}
-
-function normalizeControlNo(value) {
-  return String(value || "")
-    .trim()
-    .toUpperCase();
-}
-
-function sheetValue(row, keys) {
-  for (const key of keys) {
-    if (row[key]) return row[key];
-  }
-  return "";
-}
-
-function isExpired(value) {
-  if (!value) return false;
-  const expiry = new Date(value);
-  if (Number.isNaN(expiry.getTime())) return false;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  expiry.setHours(0, 0, 0, 0);
-  return today > expiry;
-}
-
-async function validateOptionalGhpControlNo(controlNo) {
-  const id = normalizeControlNo(controlNo);
-  if (!id) return "";
-
-  const rows = await readSheet("Certificate Issuance");
-  const row = rows.find((item) => {
-    const rowControlNo = normalizeControlNo(
-      sheetValue(item, [
-        "control_no",
-        "control_number",
-        "cert_number",
-        "certificate_no",
-      ]),
-    );
-    return rowControlNo === id;
-  });
-
-  if (!row) return "The GHP certificate control number is not valid.";
-
-  const expiryDate = sheetValue(row, [
-    "expiry_date",
-    "valid_until",
-    "expiration_date",
-  ]);
-  if (isExpired(expiryDate))
-    return "The GHP certificate control number is expired.";
-
-  return "";
-}
-
 export async function POST(request) {
   let submissionId = "";
 
   try {
-    const form = await request.formData();
-    const rawFields = {};
-    APPLICATION_FIELDS.forEach((field) => {
-      rawFields[field] = form.get(field) ?? "";
-    });
+    const body = await request.json();
 
-    const body = sanitizeApplicationFields(rawFields);
-    submissionId = body.submissionId;
+    submissionId = String(body.submissionId || "");
 
     if (submissionId) {
       if (activeSubmissions.has(submissionId)) {
         return jsonError(
-          "This application is already being submitted. Please wait for the result.",
+          "This application is already being submitted. Please wait.",
           409,
         );
       }
       activeSubmissions.add(submissionId);
     }
 
-    const fieldError = validateApplicationFields(body);
+    // Sanitize and validate form fields
+    const sanitized = sanitizeApplicationFields(body);
+    const fieldError = validateApplicationFields(sanitized);
     if (fieldError) return jsonError(fieldError);
 
-    const ghpError = await validateOptionalGhpControlNo(body.ghpCertNumber);
-    if (ghpError)
-      return jsonError(
-        `${ghpError} Leave it blank or enter a valid control number.`,
-      );
-
-    const documents = {};
-    for (const [key, value] of form.entries()) {
-      if (!key.startsWith("document:")) continue;
-      const docId = key.slice("document:".length);
-      if (value && typeof value === "object" && "arrayBuffer" in value) {
-        documents[docId] = value;
-      }
+    // folderId was created client-side before uploading files directly to Drive
+    const folderId = String(body.folderId || "").trim();
+    if (!folderId) {
+      return jsonError("Missing folderId. Files must be uploaded first.");
     }
 
-    const fileError = validateApplicationFiles(documents);
-    if (fileError) return jsonError(fileError);
+    // Optional: list of uploaded file names for the notification email
+    const uploadedFiles = Array.isArray(body.uploadedFiles)
+      ? body.uploadedFiles
+      : [];
 
     const refNumber = generateRefNumber();
-    const folderName = safeDriveName(
-      `MTV-${refNumber}_${body.registeredOwner}`,
-    );
-    const folderId = await createApplicationFolder(folderName);
-
-    await Promise.all(
-      Object.entries(documents).map(async ([docId, file]) => {
-        const buffer = await fileToBuffer(file);
-        const fileName = safeDriveName(`${refNumber}_${docId}_${file.name}`);
-        return uploadFileToDrive({
-          fileName,
-          mimeType: file.type,
-          buffer,
-          folderId,
-        });
-      }),
-    );
 
     const applicationData = {
-      ...body,
+      ...sanitized,
       refNumber,
       driveFolderId: folderId,
     };
@@ -160,9 +80,9 @@ export async function POST(request) {
     let emailSent = false;
     try {
       await sendApplicationConfirmation(
-        body.email,
+        sanitized.email,
         refNumber,
-        body.registeredOwner,
+        sanitized.registeredOwner,
       );
       emailSent = true;
     } catch (emailError) {
@@ -172,8 +92,9 @@ export async function POST(request) {
     // Send notification email to NMIS
     try {
       await sendApplicationNotificationToNMIS({
-        ...body,
+        ...sanitized,
         refNumber,
+        uploadedFiles,
       });
     } catch (emailError) {
       console.error("NMIS notification email failed:", emailError);

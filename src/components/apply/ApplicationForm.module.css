@@ -10,7 +10,7 @@
 .optimistic {
   display: flex;
   gap: 14px;
-  align-items: center;
+  align-items: flex-start;
   margin: 20px 28px 0;
   padding: 14px 16px;
   border: 1px solid rgba(26, 92, 50, .18);
@@ -19,10 +19,17 @@
   color: var(--green);
 }
 
+.optimistic strong {
+  color: var(--green-deep);
+  display: block;
+  margin-bottom: 2px;
+}
+
 .optimistic p {
-  margin-top: 2px;
   font-size: .86rem;
   color: var(--gray-700);
+  margin: 0;
+  word-break: break-word;
 }
 
 .optimisticSpinner {
@@ -33,6 +40,34 @@
   border-radius: 50%;
   animation: spin .75s linear infinite;
   flex: 0 0 auto;
+  margin-top: 2px;
+}
+
+/* Progress bar */
+.progressBarWrap {
+  position: relative;
+  height: 8px;
+  background: rgba(26, 92, 50, .15);
+  border-radius: 4px;
+  margin-top: 10px;
+  overflow: visible;
+}
+
+.progressBarFill {
+  height: 100%;
+  background: var(--green);
+  border-radius: 4px;
+  transition: width .35s ease;
+  min-width: 4px;
+}
+
+.progressLabel {
+  position: absolute;
+  right: 0;
+  top: -18px;
+  font-size: .72rem;
+  font-weight: 800;
+  color: var(--green);
 }
 
 @keyframes spin {
