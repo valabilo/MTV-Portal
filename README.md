@@ -46,11 +46,11 @@ Do not commit real production credentials.
 
 The portal uses free Google services:
 
-| Service | Purpose |
-| --- | --- |
+| Service           | Purpose                                                                                |
+| ----------------- | -------------------------------------------------------------------------------------- |
 | Google Sheets API | Accredited, banned, applications, GHP completions, contact messages, and downloadables |
-| Google Drive API | Uploaded application documents and admin-managed downloadable PDFs |
-| Gmail SMTP | Application acknowledgements, GHP certificates, and contact notifications |
+| Google Drive API  | Uploaded application documents and admin-managed downloadable PDFs                     |
+| Gmail SMTP        | Application acknowledgements, GHP certificates, and contact notifications              |
 
 ### OAuth
 
@@ -192,17 +192,17 @@ The contact page embeds Google Maps using `OFFICE_INFO.mapEmbedUrl`.
 
 ## Main Routes
 
-| Route | Purpose |
-| --- | --- |
-| `/` | Home page |
+| Route           | Purpose                                                     |
+| --------------- | ----------------------------------------------------------- |
+| `/`             | Home page                                                   |
 | `/requirements` | MTV requirements, registration guide, and PDF downloadables |
-| `/guidelines` | MTV guidelines and memorandum references |
-| `/ghp` | GHP orientation, quiz, and certificate claiming |
-| `/apply` | MTV application submission and status lookup |
-| `/verify` | Accredited MTV verification |
-| `/banned` | Banned or suspended MTV list |
-| `/contact` | Contact form, office details, FAQs, and map |
-| `/maintenance` | Maintenance/update page |
+| `/guidelines`   | MTV guidelines and memorandum references                    |
+| `/ghp`          | GHP orientation, quiz, and certificate claiming             |
+| `/apply`        | MTV application submission and status lookup                |
+| `/verify`       | Accredited MTV verification                                 |
+| `/banned`       | Banned or suspended MTV list                                |
+| `/contact`      | Contact form, office details, FAQs, and map                 |
+| `/maintenance`  | Maintenance/update page                                     |
 
 ## Project Structure
 
@@ -241,3 +241,115 @@ npm run build
 ## Deploy
 
 Deploy to Vercel or another Next.js host. Add all `.env` values in the hosting provider dashboard before deploying.
+
+## Admin Guide
+
+This section provides guidance for administrators on how to use and maintain the MTV Portal website.
+
+### Website Overview
+
+The MTV Portal is a public-facing website for:
+
+- Viewing MTV requirements and downloading forms
+- Completing GHP (Good Hauling Practices) orientation and quiz
+- Submitting MTV applications
+- Verifying accredited vehicles
+- Checking banned/suspended vehicles
+- Contacting the office
+
+### Navigation and User Flow
+
+Users can navigate using the header menu. Key pages:
+
+- **Home**: Introduction and quick links
+- **Guidelines**: Official guidelines and references
+- **GHP Orientation**: Video content and quiz for certification
+- **Requirements**: List of required documents and downloadable PDFs
+- **MTV Application**: Multi-step application form
+- **Verify MTV**: Search for accredited vehicles
+- **Banned List**: View suspended vehicles
+- **Contact**: Office info, FAQs, and contact form
+
+### Editing Static Content
+
+#### Constants and Configuration
+
+Edit `src/lib/constants.js` to change:
+
+- App name, agency name, region
+- Navigation menu items
+- Office information (address, phone, email, hours, map embed URL)
+- File upload limits and accepted types
+- FAQs on the contact page
+
+#### Required Documents
+
+Update the list of required documents in `src/data/requiredDocs.js`. Each document has:
+
+- ID, name, description, required status
+
+#### GHP Quiz and Content
+
+Modify quiz questions, answers, and video content in `src/data/ghpQuiz.js`:
+
+- Passing score and time limit
+- Questions with options and correct answers
+- Video URLs and durations
+
+#### Page Content
+
+- **Guidelines**: Edit `src/app/guidelines/page.jsx`
+- **Requirements**: Edit `src/app/requirements/page.jsx`
+- **Home Page**: Edit `src/app/page.jsx` and components in `src/components/home/`
+- **Contact Page**: Edit `src/app/contact/page.jsx` for additional content
+
+### Managing Dynamic Data
+
+#### Google Sheets Data
+
+- **Accredited Vehicles**: Update the `Accredited` tab in Google Sheets
+- **Banned Vehicles**: Update the `Banned` tab
+- **Downloadables**: Edit the `Downloadables` tab to add/remove PDF links (set `active` to `no` to hide)
+- Applications, GHP completions, and contacts are automatically saved
+
+#### Google Drive
+
+- Upload application documents to the folder specified by `GOOGLE_DRIVE_FOLDER_ID`
+- For downloadable PDFs, upload to a shared folder and update share links in the `Downloadables` sheet
+
+### Environment Variables for Admin Control
+
+- `NEXT_PUBLIC_DEMO_MODE`: Set to `true` for demo data (no real submissions)
+- `MAINTENANCE_MODE`: Enable to show maintenance page
+- `MAINTENANCE_MESSAGE` and `MAINTENANCE_ETA`: Customize maintenance text
+- Google and Gmail credentials: Update as needed for service changes
+
+Restart the server after changing `.env` variables.
+
+### API Routes (For Reference)
+
+- `/api/accredited`: Fetch accredited vehicles
+- `/api/applications`: Submit new applications
+- `/api/banned`: Fetch banned vehicles
+- `/api/contact`: Submit contact messages
+- `/api/drive`: Handle file uploads
+- `/api/generate-ref-number`: Generate application reference numbers
+- `/api/ghp`: Handle GHP quiz and certificates
+- `/api/quiz`: Quiz-related operations
+- `/api/verify`: Verify vehicle accreditation
+
+### Maintenance and Troubleshooting
+
+- Use maintenance mode to take the site offline for updates
+- Check server logs for errors
+- Ensure Google Sheets and Drive permissions are correct
+- Test email functionality with Gmail settings
+
+### Development Notes
+
+- Built with Next.js 14, React, Tailwind CSS
+- Uses Google Sheets API for data storage (free tier)
+- File uploads via Google Drive
+- Email notifications via Gmail SMTP
+
+For technical support or customizations, refer to the project structure and code comments.
