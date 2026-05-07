@@ -6,8 +6,9 @@
  *   • Quiz_Questions  (id, question, option1-4, correct_index)
  *   • Quiz_Config     (key, value)
  *
- * Falls back to hardcoded questions when the sheet is unavailable
- * (e.g. during local dev without env vars).
+ * Questions are shuffled on every request so each user gets a
+ * different order. Falls back to hardcoded questions when the sheet
+ * is unavailable (e.g. during local dev without env vars).
  */
 
 import { NextResponse } from "next/server";
@@ -77,8 +78,20 @@ const FALLBACK_CONFIG = {
   totalQuestions: 5,
 };
 
+/** Fisher-Yates shuffle – returns a new shuffled array */
+function shuffle(array) {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
 function normalizeAnswer(value) {
-  return String(value ?? "").trim().toLowerCase();
+  return String(value ?? "")
+    .trim()
+    .toLowerCase();
 }
 
 function getCorrectIndex(row, options) {
@@ -131,11 +144,15 @@ export async function GET() {
       10,
     );
     const passThreshold = parseFloat(configMap["pass_threshold"] ?? 0.7);
+
+    // Shuffle all available questions, then slice to the requested count
+    const shuffled = shuffle(questions);
     const sheetQuestions =
-      requestedTotal > 0 ? questions.slice(0, requestedTotal) : questions;
+      requestedTotal > 0 ? shuffled.slice(0, requestedTotal) : shuffled;
     const finalQuestions = sheetQuestions.length
       ? sheetQuestions
-      : FALLBACK_QUESTIONS;
+      : shuffle(FALLBACK_QUESTIONS);
+
     const config = {
       passThreshold: Number.isFinite(passThreshold) ? passThreshold : 0.7,
       totalQuestions: finalQuestions.length,
@@ -150,7 +167,7 @@ export async function GET() {
   } catch (err) {
     console.warn("Quiz sheet unavailable, using fallback:", err.message);
     return NextResponse.json(
-      { questions: FALLBACK_QUESTIONS, config: FALLBACK_CONFIG },
+      { questions: shuffle(FALLBACK_QUESTIONS), config: FALLBACK_CONFIG },
       { status: 200 },
     );
   }

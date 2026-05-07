@@ -3,7 +3,7 @@
  * components/ghp/QuizCard.jsx
  */
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import styles from "./QuizCard.module.css";
 
 export default function QuizCard({ unlocked, onPass, showToast }) {
@@ -13,6 +13,7 @@ export default function QuizCard({ unlocked, onPass, showToast }) {
   const [answers, setAnswers] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [score, setScore] = useState(null);
+  const cardRef = useRef(null);
 
   const selectAnswer = useCallback(
     (qi, oi) => {
@@ -20,6 +21,15 @@ export default function QuizCard({ unlocked, onPass, showToast }) {
     },
     [submitted],
   );
+
+  // Auto-scroll into view when quiz becomes unlocked
+  useEffect(() => {
+    if (unlocked && cardRef.current) {
+      setTimeout(() => {
+        cardRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 300);
+    }
+  }, [unlocked]);
 
   useEffect(() => {
     fetch("/api/quiz")
@@ -33,7 +43,7 @@ export default function QuizCard({ unlocked, onPass, showToast }) {
 
   if (loading)
     return (
-      <div className={styles.card}>
+      <div className={styles.card} ref={cardRef}>
         <div className={styles.header}>
           <div className={styles.headerIcon}>📝</div>
           <div className={styles.headerText}>
@@ -51,7 +61,7 @@ export default function QuizCard({ unlocked, onPass, showToast }) {
 
   if (error || !quizData?.questions || !quizData?.config)
     return (
-      <div className={styles.card}>
+      <div className={styles.card} ref={cardRef}>
         <div className={styles.header}>
           <div className={styles.headerIcon}>⚠️</div>
           <div className={styles.headerText}>
@@ -90,7 +100,7 @@ export default function QuizCard({ unlocked, onPass, showToast }) {
     const passed = pct >= passThreshold;
     setScore({ correct, pct: Math.round(pct * 100), passed });
     setSubmitted(true);
-    if (passed) onPass(correct, totalQuestions); // ← pass total back
+    if (passed) onPass(correct, totalQuestions);
   }
 
   function handleRetake() {
@@ -100,7 +110,14 @@ export default function QuizCard({ unlocked, onPass, showToast }) {
   }
 
   return (
-    <div className={styles.card}>
+    <div
+      className={styles.card}
+      ref={cardRef}
+      style={
+        unlocked && !submitted
+          ? { outline: "2px solid var(--green)", outlineOffset: "3px" }
+          : {}
+      }>
       <div className={styles.header}>
         <div className={styles.headerIcon}>📝</div>
         <div className={styles.headerText}>

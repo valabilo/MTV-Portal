@@ -111,6 +111,12 @@ export async function ensureHeaders(sheetName, expectedHeaders) {
     "owner_name_on_cr",
     "operator_name",
     "business_tin",
+    // legacy fields removed from form
+    "body_type",
+    "fuel_type",
+    "gross_weight",
+    "net_capacity",
+    "lto_client_id",
   ]);
   const normalizedExpectedHeaders = new Set(expectedHeaders);
   const customHeaders = currentHeaders.filter(
@@ -166,6 +172,13 @@ export async function saveGHPCompletion(data) {
 /**
  * Saves a new MTV application.
  * Sheet tab name: Applications
+ *
+ * Header row (26 columns):
+ * ref_number | timestamp | application_type | registered_owner | email | contact |
+ * address | region | province | ghp_cert_number | plate | vtype | vmake | vmodel |
+ * vyear | capacity | bname | btype | baddress | drive_folder_id | status |
+ * vcolor | vengine | vchassis | cr_number | or_number | cooling | material |
+ * meat_establishment | intended_route
  */
 const APPLICATION_HEADERS = [
   "ref_number",
@@ -194,12 +207,7 @@ const APPLICATION_HEADERS = [
   "vchassis",
   "cr_number",
   "or_number",
-  "lto_client_id",
-  "body_type",
-  "fuel_type",
   "cooling",
-  "gross_weight",
-  "net_capacity",
   "material",
   "meat_establishment",
   "intended_route",
@@ -235,12 +243,7 @@ export async function saveApplication(data) {
     data.vchassis ?? "",
     data.crNumber ?? "",
     data.orNumber ?? "",
-    data.ltoClientId ?? "",
-    data.bodyType ?? "",
-    data.fuelType ?? "",
     data.cooling ?? "",
-    data.grossWeight ?? "",
-    data.netCapacity ?? "",
     data.material ?? "",
     data.meatEstablishment ?? "",
     data.intendedRoute ?? "",

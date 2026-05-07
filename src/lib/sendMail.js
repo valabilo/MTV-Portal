@@ -42,14 +42,139 @@ export async function sendApplicationConfirmation(
     to: email,
     subject: `MTV Application Confirmation - ${refNumber}`,
     html: `
-      <h2>Application Submitted Successfully</h2>
-      <p>Dear ${applicantName},</p>
-      <p>Your MTV application has been submitted successfully.</p>
-      <p><strong>Reference Number:</strong> ${refNumber}</p>
-      <p>You can use this reference number to track your application status.</p>
-      <p>We will review your application and contact you soon.</p>
-      <br />
-      <p>Best regards,<br />MTV Portal Team</p>
+      <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;background:#f9f9f9;">
+        <div style="background:#1a5c32;padding:20px 24px;border-radius:8px 8px 0 0;">
+          <h1 style="color:#ffffff;margin:0;font-size:20px;">MTV Portal – Application Submitted</h1>
+        </div>
+        <div style="background:#ffffff;padding:24px;border:1px solid #e0e0e0;border-top:none;border-radius:0 0 8px 8px;">
+          <p>Dear <strong>${applicantName}</strong>,</p>
+          <p>Your MTV accreditation application has been successfully submitted and received by NMIS RTOC III.</p>
+          <div style="background:#e6f2ec;border:1px dashed #1a5c32;border-radius:8px;padding:16px;margin:20px 0;text-align:center;">
+            <p style="margin:0;font-size:13px;color:#555;">Reference Number</p>
+            <p style="margin:6px 0 0;font-size:24px;font-weight:bold;color:#1a5c32;letter-spacing:2px;">${refNumber}</p>
+          </div>
+          <p>Please keep this reference number for tracking your application status.</p>
+          <p>Our team will review your documents and notify you of any updates. Processing typically takes <strong>5–10 working days</strong> after submission of complete requirements.</p>
+          <p>You can track your application status at any time by visiting the <a href="${process.env.NEXT_PUBLIC_SITE_URL || "https://your-portal-url.com"}/application-status?ref=${refNumber}" style="color:#1a5c32;font-weight:bold;">Application Status page</a>.</p>
+          <hr style="border:none;border-top:1px solid #eee;margin:24px 0;"/>
+          <p style="font-size:13px;color:#888;">If you did not submit this application, please contact us immediately at <a href="mailto:rtoc3@nmis.gov.ph">rtoc3@nmis.gov.ph</a>.</p>
+          <p style="margin-top:24px;">Best regards,<br/><strong>NMIS Regional Technical Operation Center III</strong><br/>San Fernando, Pampanga</p>
+        </div>
+      </div>
+    `,
+  });
+}
+
+export async function sendApplicationNotificationToNMIS(applicationData) {
+  const transport = getTransporter();
+  const recipient =
+    process.env.CONTACT_RECIPIENT_EMAIL ||
+    process.env.NMIS_CONTACT_EMAIL ||
+    process.env.GMAIL_USER ||
+    process.env.EMAIL_USER;
+
+  if (!recipient) {
+    throw new Error("Missing CONTACT_RECIPIENT_EMAIL or Gmail sender address.");
+  }
+
+  const {
+    refNumber,
+    registeredOwner,
+    email,
+    contact,
+    address,
+    region,
+    province,
+    plate,
+    vtype,
+    vmake,
+    vmodel,
+    vyear,
+    vcolor,
+    vengine,
+    vchassis,
+    crNumber,
+    orNumber,
+    ltoClientId,
+    bodyType,
+    fuelType,
+    cooling,
+    capacity,
+    grossWeight,
+    netCapacity,
+    material,
+    meatEstablishment,
+    intendedRoute,
+    ghpCertNumber,
+    applicationType,
+    bname,
+    btype,
+    baddress,
+  } = applicationData;
+
+  return transport.sendMail({
+    to: recipient,
+    replyTo: email,
+    subject: `[MTV Portal] New Application Submitted – ${refNumber}`,
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:650px;margin:0 auto;padding:24px;background:#f9f9f9;">
+        <div style="background:#1a5c32;padding:20px 24px;border-radius:8px 8px 0 0;">
+          <h1 style="color:#ffffff;margin:0;font-size:20px;">New MTV Application Received</h1>
+        </div>
+        <div style="background:#ffffff;padding:24px;border:1px solid #e0e0e0;border-top:none;border-radius:0 0 8px 8px;">
+          <div style="background:#e6f2ec;border-radius:8px;padding:16px;margin-bottom:24px;">
+            <p style="margin:0;font-size:13px;color:#555;">Reference Number</p>
+            <p style="margin:4px 0 0;font-size:22px;font-weight:bold;color:#1a5c32;letter-spacing:2px;">${refNumber}</p>
+            <p style="margin:6px 0 0;font-size:13px;color:#555;">Application Type: <strong>${applicationType || "New"}</strong></p>
+          </div>
+
+          <h3 style="color:#1a5c32;border-bottom:2px solid #e6f2ec;padding-bottom:8px;">Applicant Information</h3>
+          <table style="width:100%;border-collapse:collapse;font-size:14px;margin-bottom:20px;">
+            <tr><td style="padding:6px 0;color:#888;width:40%;">Registered Owner</td><td style="padding:6px 0;font-weight:bold;">${registeredOwner}</td></tr>
+            <tr><td style="padding:6px 0;color:#888;">Email</td><td style="padding:6px 0;"><a href="mailto:${email}">${email}</a></td></tr>
+            <tr><td style="padding:6px 0;color:#888;">Contact Number</td><td style="padding:6px 0;">${contact}</td></tr>
+            <tr><td style="padding:6px 0;color:#888;">Address</td><td style="padding:6px 0;">${address}</td></tr>
+            <tr><td style="padding:6px 0;color:#888;">Region</td><td style="padding:6px 0;">${region}</td></tr>
+            <tr><td style="padding:6px 0;color:#888;">Province</td><td style="padding:6px 0;">${province}</td></tr>
+            <tr><td style="padding:6px 0;color:#888;">GHP Cert No.</td><td style="padding:6px 0;">${ghpCertNumber || "Not provided"}</td></tr>
+          </table>
+
+          <h3 style="color:#1a5c32;border-bottom:2px solid #e6f2ec;padding-bottom:8px;">Vehicle Information</h3>
+          <table style="width:100%;border-collapse:collapse;font-size:14px;margin-bottom:20px;">
+            <tr><td style="padding:6px 0;color:#888;width:40%;">Plate Number</td><td style="padding:6px 0;font-weight:bold;">${plate}</td></tr>
+            <tr><td style="padding:6px 0;color:#888;">Vehicle Type</td><td style="padding:6px 0;">${vtype}</td></tr>
+            <tr><td style="padding:6px 0;color:#888;">Make / Model / Year</td><td style="padding:6px 0;">${vmake} ${vmodel} (${vyear})</td></tr>
+            <tr><td style="padding:6px 0;color:#888;">Color</td><td style="padding:6px 0;">${vcolor || "—"}</td></tr>
+            <tr><td style="padding:6px 0;color:#888;">Engine No.</td><td style="padding:6px 0;">${vengine || "—"}</td></tr>
+            <tr><td style="padding:6px 0;color:#888;">Chassis No.</td><td style="padding:6px 0;">${vchassis || "—"}</td></tr>
+            <tr><td style="padding:6px 0;color:#888;">CR Number</td><td style="padding:6px 0;">${crNumber || "—"}</td></tr>
+            <tr><td style="padding:6px 0;color:#888;">OR Number</td><td style="padding:6px 0;">${orNumber || "—"}</td></tr>
+            <tr><td style="padding:6px 0;color:#888;">LTO Client ID</td><td style="padding:6px 0;">${ltoClientId || "—"}</td></tr>
+            <tr><td style="padding:6px 0;color:#888;">Body Type</td><td style="padding:6px 0;">${bodyType || "—"}</td></tr>
+            <tr><td style="padding:6px 0;color:#888;">Fuel Type</td><td style="padding:6px 0;">${fuelType || "—"}</td></tr>
+            <tr><td style="padding:6px 0;color:#888;">Cooling Capacity</td><td style="padding:6px 0;">${cooling || "—"}</td></tr>
+            <tr><td style="padding:6px 0;color:#888;">Load Capacity</td><td style="padding:6px 0;">${capacity} kg</td></tr>
+            <tr><td style="padding:6px 0;color:#888;">Gross Weight</td><td style="padding:6px 0;">${grossWeight || "—"} kg</td></tr>
+            <tr><td style="padding:6px 0;color:#888;">Net Capacity</td><td style="padding:6px 0;">${netCapacity || "—"} kg</td></tr>
+            <tr><td style="padding:6px 0;color:#888;">Compartment Material</td><td style="padding:6px 0;">${material || "—"}</td></tr>
+          </table>
+
+          <h3 style="color:#1a5c32;border-bottom:2px solid #e6f2ec;padding-bottom:8px;">Business Information</h3>
+          <table style="width:100%;border-collapse:collapse;font-size:14px;margin-bottom:24px;">
+            <tr><td style="padding:6px 0;color:#888;width:40%;">Meat Establishment</td><td style="padding:6px 0;">${meatEstablishment}</td></tr>
+            <tr><td style="padding:6px 0;color:#888;">Intended Route</td><td style="padding:6px 0;">${intendedRoute}</td></tr>
+            ${bname ? `<tr><td style="padding:6px 0;color:#888;">Business Name</td><td style="padding:6px 0;">${bname}</td></tr>` : ""}
+            ${btype ? `<tr><td style="padding:6px 0;color:#888;">Business Type</td><td style="padding:6px 0;">${btype}</td></tr>` : ""}
+            ${baddress ? `<tr><td style="padding:6px 0;color:#888;">Business Address</td><td style="padding:6px 0;">${baddress}</td></tr>` : ""}
+          </table>
+
+          <div style="background:#fff8e1;border:1px solid #ffe082;border-radius:8px;padding:16px;">
+            <p style="margin:0;font-size:14px;color:#795548;">📎 All uploaded documents have been saved to Google Drive. Please log in to the portal to review and process this application.</p>
+          </div>
+
+          <p style="margin-top:24px;font-size:13px;color:#888;">This is an automated notification from the MTV Portal System.</p>
+        </div>
+      </div>
     `,
   });
 }
@@ -61,14 +186,19 @@ export async function sendGHPCompletion(email, name, certNumber, score) {
     to: email,
     subject: `GHP Certificate - ${certNumber}`,
     html: `
-      <h2>GHP Orientation Complete</h2>
-      <p>Dear ${name},</p>
-      <p>Congratulations! You have completed the GHP orientation.</p>
-      <p><strong>Certificate Number:</strong> ${certNumber}</p>
-      <p><strong>Score:</strong> ${score}%</p>
-      <p>You can now proceed with your MTV application.</p>
-      <br />
-      <p>Best regards,<br />MTV Portal Team</p>
+      <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;background:#f9f9f9;">
+        <div style="background:#1a5c32;padding:20px 24px;border-radius:8px 8px 0 0;">
+          <h1 style="color:#ffffff;margin:0;font-size:20px;">GHP Orientation Complete</h1>
+        </div>
+        <div style="background:#ffffff;padding:24px;border:1px solid #e0e0e0;border-top:none;border-radius:0 0 8px 8px;">
+          <p>Dear <strong>${name}</strong>,</p>
+          <p>Congratulations! You have successfully completed the GHP Orientation.</p>
+          <p><strong>Certificate Number:</strong> ${certNumber}</p>
+          <p><strong>Score:</strong> ${score}%</p>
+          <p>You can now proceed with your MTV application.</p>
+          <p>Best regards,<br/><strong>NMIS RTOC III</strong></p>
+        </div>
+      </div>
     `,
   });
 }
@@ -80,14 +210,13 @@ export async function sendVerificationResult(email, name, plate, status) {
     to: email,
     subject: `Vehicle Verification Result - ${plate}`,
     html: `
-      <h2>Vehicle Verification Result</h2>
-      <p>Dear ${name},</p>
-      <p>Your vehicle verification has been processed.</p>
-      <p><strong>Plate Number:</strong> ${plate}</p>
-      <p><strong>Status:</strong> <strong style="color: ${status === "Verified" ? "green" : "red"}">${status}</strong></p>
-      <p>If you have any questions, please contact our support team.</p>
-      <br />
-      <p>Best regards,<br />MTV Portal Team</p>
+      <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;">
+        <h2>Vehicle Verification Result</h2>
+        <p>Dear ${name},</p>
+        <p><strong>Plate Number:</strong> ${plate}</p>
+        <p><strong>Status:</strong> <strong style="color:${status === "Verified" ? "green" : "red"}">${status}</strong></p>
+        <p>Best regards,<br/><strong>NMIS RTOC III</strong></p>
+      </div>
     `,
   });
 }
@@ -99,17 +228,28 @@ export async function sendContactReply(email, subject, message) {
     to: email,
     subject: `Re: ${subject}`,
     html: `
-      <p>Thank you for contacting MTV Portal.</p>
-      <p>We have received your message and will respond shortly.</p>
-      <p><strong>Your Message:</strong></p>
-      <p>${message}</p>
-      <br />
-      <p>Best regards,<br />MTV Portal Team</p>
+      <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;background:#f9f9f9;">
+        <div style="background:#1a5c32;padding:20px 24px;border-radius:8px 8px 0 0;">
+          <h1 style="color:#ffffff;margin:0;font-size:20px;">Message Received</h1>
+        </div>
+        <div style="background:#ffffff;padding:24px;border:1px solid #e0e0e0;border-top:none;border-radius:0 0 8px 8px;">
+          <p>Thank you for contacting MTV Portal. We have received your message and will respond shortly.</p>
+          <p><strong>Your Message:</strong></p>
+          <div style="background:#f5f5f5;border-radius:8px;padding:16px;font-size:14px;color:#555;">${message}</div>
+          <p style="margin-top:24px;">Best regards,<br/><strong>NMIS RTOC III</strong></p>
+        </div>
+      </div>
     `,
   });
 }
 
-export async function sendContactNotification({ name, email, phone, subject, message }) {
+export async function sendContactNotification({
+  name,
+  email,
+  phone,
+  subject,
+  message,
+}) {
   const transport = getTransporter();
   const recipient =
     process.env.CONTACT_RECIPIENT_EMAIL ||
@@ -126,13 +266,19 @@ export async function sendContactNotification({ name, email, phone, subject, mes
     replyTo: email,
     subject: `MTV Portal Contact: ${subject}`,
     html: `
-      <h2>New MTV Portal Contact Message</h2>
-      <p><strong>Name:</strong> ${name}</p>
-      <p><strong>Email:</strong> ${email}</p>
-      <p><strong>Phone:</strong> ${phone || "Not provided"}</p>
-      <p><strong>Subject:</strong> ${subject}</p>
-      <p><strong>Message:</strong></p>
-      <p>${message}</p>
+      <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;background:#f9f9f9;">
+        <div style="background:#1a5c32;padding:20px 24px;border-radius:8px 8px 0 0;">
+          <h1 style="color:#ffffff;margin:0;font-size:20px;">New Contact Message</h1>
+        </div>
+        <div style="background:#ffffff;padding:24px;border:1px solid #e0e0e0;border-top:none;border-radius:0 0 8px 8px;">
+          <p><strong>Name:</strong> ${name}</p>
+          <p><strong>Email:</strong> <a href="mailto:${email}">${email}</a></p>
+          <p><strong>Phone:</strong> ${phone || "Not provided"}</p>
+          <p><strong>Subject:</strong> ${subject}</p>
+          <p><strong>Message:</strong></p>
+          <div style="background:#f5f5f5;border-radius:8px;padding:16px;font-size:14px;color:#555;">${message}</div>
+        </div>
+      </div>
     `,
   });
 }

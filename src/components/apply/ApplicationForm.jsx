@@ -3,11 +3,7 @@
  * components/apply/ApplicationForm.jsx
  *
  * Orchestrates the 4-step MTV application form.
- * Documents are converted to base64 and uploaded to Google Drive
- * via the /api/applications endpoint.
- *
- * GHP orientation is completely separate — users do NOT need to
- * complete GHP before applying here.
+ * Documents are uploaded to Google Drive via the /api/applications endpoint.
  */
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
@@ -90,7 +86,7 @@ function clearSavedDraft() {
   try {
     window.localStorage.removeItem(DRAFT_STORAGE_KEY);
   } catch {
-    // Ignore storage failures so form submission/reset still completes.
+    // Ignore storage failures
   }
 }
 
@@ -98,7 +94,7 @@ export default function ApplicationForm() {
   const formRef = useRef(null);
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState(INITIAL_FORM);
-  const [files, setFiles] = useState({}); // { docId: File }
+  const [files, setFiles] = useState({});
   const [agree, setAgree] = useState(false);
   const [refNumber, setRefNumber] = useState("");
   const [submitted, setSubmitted] = useState(false);
@@ -142,7 +138,7 @@ export default function ApplicationForm() {
           }),
         );
       } catch {
-        // The form remains usable even if browser storage is unavailable.
+        // Ignore
       }
     }, 250);
 
@@ -262,9 +258,7 @@ export default function ApplicationForm() {
     try {
       const res = await fetch(
         `/api/ghp/certificate?id=${encodeURIComponent(controlNo)}`,
-        {
-          cache: "no-store",
-        },
+        { cache: "no-store" },
       );
       const json = await res.json();
 
@@ -292,34 +286,56 @@ export default function ApplicationForm() {
     if (submitting) return;
     const validGhp = await validateOptionalGhpControlNo();
     if (!validGhp) return;
+
     setSubmitting(true);
     startTransition(() =>
       setOptimisticMessage(
         "Securing your application and uploading documents...",
       ),
     );
+
     try {
+      // Build FormData — this is critical. Do NOT use JSON.stringify here.
       const payload = new FormData();
       payload.append("submissionId", submissionId);
+
       Object.entries(formData).forEach(([key, value]) => {
         payload.append(key, value ?? "");
       });
+
       Object.entries(files).forEach(([docId, file]) => {
         payload.append(`document:${docId}`, file, file.name);
       });
 
+      // Important: do NOT set Content-Type header — browser sets it automatically
+      // with the correct multipart boundary when using FormData
       const res = await fetch("/api/applications", {
         method: "POST",
         body: payload,
+        // No 'Content-Type' header! Browser handles it for FormData
       });
-      const json = await res.json();
+
+      // Guard against non-JSON responses
+      const text = await res.text();
+      let json;
+      try {
+        json = JSON.parse(text);
+      } catch {
+        console.error("Non-JSON response:", text);
+        throw new Error(
+          "Server returned an unexpected response. Please try again.",
+        );
+      }
+
       if (!json.success) throw new Error(json.error);
+
       if (!json.emailSent) {
         showToast(
           "Application submitted, but the confirmation email could not be sent. Please keep your reference number.",
           true,
         );
       }
+
       setRefNumber(json.refNumber);
       setSubmitted(true);
       clearSavedDraft();

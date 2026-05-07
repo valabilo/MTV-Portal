@@ -82,7 +82,7 @@ export default function Step1Applicant({
           </label>
           <textarea
             {...f("address")}
-            placeholder="House/Lot No., Street, Barangay, City/Municipality, Province"
+            placeholder="Street, Barangay, City/Municipality, Province"
           />
         </div>
         <div className="form-group">
@@ -163,7 +163,9 @@ export default function Step1Applicant({
           />
           <span className="form-hint">
             Don't have one yet?{" "}
-            <Link href="/ghp" style={{ color: "var(--green)", fontWeight: 700 }}>
+            <Link
+              href="/ghp"
+              style={{ color: "var(--green)", fontWeight: 700 }}>
               Complete GHP Orientation
             </Link>
           </span>

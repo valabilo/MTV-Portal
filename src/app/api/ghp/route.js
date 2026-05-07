@@ -8,7 +8,9 @@
  *  1. Validate score server-side against Quiz_Config pass threshold
  *  2. Append a row to the Quiz_Attempts sheet so the existing Apps Script
  *     generates the control number and emails the PDF certificate.
- *  3. Return { success, queued, submittedAt } to the client.
+ *  3. Optionally trigger the Apps Script webhook immediately so the cert
+ *     is processed without waiting for the time-driven trigger.
+ *  4. Return { success, queued, submittedAt } to the client.
  */
 
 import { NextResponse } from "next/server";
@@ -25,6 +27,23 @@ function clean(value, limit = 180) {
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, limit);
+}
+
+async function triggerAppsScript() {
+  const webhookUrl = process.env.APPS_SCRIPT_WEBHOOK_URL;
+  if (!webhookUrl) return;
+
+  try {
+    await fetch(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ trigger: "sendCertificates" }),
+    });
+    console.log("Apps Script webhook triggered successfully.");
+  } catch (err) {
+    // Non-fatal — the time-driven trigger will pick it up within 5 minutes
+    console.error("Apps Script webhook trigger failed:", err.message);
+  }
 }
 
 export async function POST(request) {
@@ -85,7 +104,10 @@ export async function POST(request) {
     attemptKey = `${email}:${new Date().toISOString().slice(0, 10)}`;
     if (activeCertificates.has(attemptKey)) {
       return NextResponse.json(
-        { success: false, error: "Your certificate request is already being processed." },
+        {
+          success: false,
+          error: "Your certificate request is already being processed.",
+        },
         { status: 409 },
       );
     }
@@ -115,6 +137,10 @@ export async function POST(request) {
       "",
       now.toISOString(),
     ]);
+
+    // ── 4. Trigger Apps Script webhook so cert is processed immediately ──
+    // Fire-and-forget — do not await so it doesn't slow down the response
+    triggerAppsScript();
 
     return NextResponse.json(
       { success: true, queued: true, submittedAt },

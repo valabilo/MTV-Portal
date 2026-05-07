@@ -13,8 +13,22 @@ export const REQUIRED_DOCS = [
   {
     id: "ghp_attendance",
     name: "GHP Completion or Attendance Certificate",
-    description: "Optional certificate for owner/manager, driver/helper/pahinante.",
-    required: false,
+    description: "Certificate for owner/manager, driver/helper/pahinante.",
+    required: true,
+  },
+  {
+    id: "nmis_checklist_application",
+    name: "NMIS Checklist for MTV Application",
+    description:
+      "Accomplished NMIS Checklist for Meat Transport Vehicle (MTV) Application.",
+    required: true,
+  },
+  {
+    id: "nmis_checklist_inspection",
+    name: "NMIS Checklist for MTV Inspection",
+    description:
+      "Accomplished NMIS Checklist for Meat Transport Vehicle (MTV) Inspection.",
+    required: true,
   },
   {
     id: "certificate_registration",
@@ -37,13 +51,15 @@ export const REQUIRED_DOCS = [
   {
     id: "health_certificates",
     name: "Health Certificates",
-    description: "Health certificates of porter and driver issued by a government physician.",
+    description:
+      "Health certificates of porter and driver issued by a government physician.",
     required: true,
   },
   {
     id: "vehicle_photos",
     name: "Clear Colored Vehicle Photos",
-    description: "7x5 inch photos: front, left/right side, closed back with plate number, and inside view.",
+    description:
+      "7x5 inch photos: front, left/right side, closed back with plate number, and inside view.",
     required: true,
   },
 ];

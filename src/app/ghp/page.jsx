@@ -3,7 +3,7 @@
  * app/ghp/page.jsx - GHP Orientation (/ghp)
  */
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/useToast";
 import Toast from "@/components/ui/Toast";
 import StepsBar from "@/components/ghp/StepsBar";
@@ -21,7 +21,7 @@ export default function GHPPage() {
 
   const currentStep = quizPassed ? 3 : videoWatched ? 2 : 1;
 
-  function handleMarkWatched() {
+  const handleMarkWatched = useCallback(() => {
     setVideoWatched(true);
     showToast("Video marked as watched. Scroll down to take the quiz.");
     setTimeout(() => {
@@ -29,19 +29,22 @@ export default function GHPPage() {
         .getElementById("ghp-quiz")
         ?.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 400);
-  }
+  }, [showToast]);
 
-  function handleQuizPass(score, total) {
-    setQuizScore(score);
-    setQuizTotal(total ?? 10);
-    setQuizPassed(true);
-    showToast("You passed. Scroll down to claim your certificate.");
-    setTimeout(() => {
-      document
-        .getElementById("ghp-cert")
-        ?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 500);
-  }
+  const handleQuizPass = useCallback(
+    (score, total) => {
+      setQuizScore(score);
+      setQuizTotal(total ?? 10);
+      setQuizPassed(true);
+      showToast("You passed. Scroll down to claim your certificate.");
+      setTimeout(() => {
+        document
+          .getElementById("ghp-cert")
+          ?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 500);
+    },
+    [showToast],
+  );
 
   return (
     <>
@@ -60,7 +63,10 @@ export default function GHPPage() {
           <section className={styles.overview}>
             <div>
               <span className={styles.kicker}>Orientation Flow</span>
-              <h2>Watch the orientation, pass the exam, and claim your GHP certificate.</h2>
+              <h2>
+                Watch the orientation, pass the exam, and claim your GHP
+                certificate.
+              </h2>
               <p>
                 The GHP certificate is used as supporting proof for MTV
                 registration. Complete the steps in order so your certificate
@@ -113,6 +119,7 @@ export default function GHPPage() {
 
             <div id="ghp-quiz">
               <QuizCard
+                key={videoWatched ? "unlocked" : "locked"}
                 unlocked={videoWatched}
                 onPass={handleQuizPass}
                 showToast={showToast}

@@ -7,7 +7,10 @@ import { NextResponse } from "next/server";
 import { generateRefNumber } from "@/lib/refNumber";
 import { readSheet, saveApplication } from "@/lib/googleSheets";
 import { createApplicationFolder, uploadFileToDrive } from "@/lib/driveService";
-import { sendApplicationConfirmation } from "@/lib/sendMail";
+import {
+  sendApplicationConfirmation,
+  sendApplicationNotificationToNMIS,
+} from "@/lib/sendMail";
 import {
   APPLICATION_FIELDS,
   safeDriveName,
@@ -30,27 +33,25 @@ async function fileToBuffer(file) {
 }
 
 function normalizeControlNo(value) {
-  return String(value || "").trim().toUpperCase();
+  return String(value || "")
+    .trim()
+    .toUpperCase();
 }
 
 function sheetValue(row, keys) {
   for (const key of keys) {
     if (row[key]) return row[key];
   }
-
   return "";
 }
 
 function isExpired(value) {
   if (!value) return false;
-
   const expiry = new Date(value);
   if (Number.isNaN(expiry.getTime())) return false;
-
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   expiry.setHours(0, 0, 0, 0);
-
   return today > expiry;
 }
 
@@ -61,16 +62,25 @@ async function validateOptionalGhpControlNo(controlNo) {
   const rows = await readSheet("Certificate Issuance");
   const row = rows.find((item) => {
     const rowControlNo = normalizeControlNo(
-      sheetValue(item, ["control_no", "control_number", "cert_number", "certificate_no"]),
+      sheetValue(item, [
+        "control_no",
+        "control_number",
+        "cert_number",
+        "certificate_no",
+      ]),
     );
-
     return rowControlNo === id;
   });
 
   if (!row) return "The GHP certificate control number is not valid.";
 
-  const expiryDate = sheetValue(row, ["expiry_date", "valid_until", "expiration_date"]);
-  if (isExpired(expiryDate)) return "The GHP certificate control number is expired.";
+  const expiryDate = sheetValue(row, [
+    "expiry_date",
+    "valid_until",
+    "expiration_date",
+  ]);
+  if (isExpired(expiryDate))
+    return "The GHP certificate control number is expired.";
 
   return "";
 }
@@ -90,7 +100,10 @@ export async function POST(request) {
 
     if (submissionId) {
       if (activeSubmissions.has(submissionId)) {
-        return jsonError("This application is already being submitted. Please wait for the result.", 409);
+        return jsonError(
+          "This application is already being submitted. Please wait for the result.",
+          409,
+        );
       }
       activeSubmissions.add(submissionId);
     }
@@ -99,7 +112,10 @@ export async function POST(request) {
     if (fieldError) return jsonError(fieldError);
 
     const ghpError = await validateOptionalGhpControlNo(body.ghpCertNumber);
-    if (ghpError) return jsonError(`${ghpError} Leave it blank or enter a valid control number.`);
+    if (ghpError)
+      return jsonError(
+        `${ghpError} Leave it blank or enter a valid control number.`,
+      );
 
     const documents = {};
     for (const [key, value] of form.entries()) {
@@ -114,14 +130,15 @@ export async function POST(request) {
     if (fileError) return jsonError(fileError);
 
     const refNumber = generateRefNumber();
-    const folderName = safeDriveName(`MTV-${refNumber}_${body.registeredOwner}`);
+    const folderName = safeDriveName(
+      `MTV-${refNumber}_${body.registeredOwner}`,
+    );
     const folderId = await createApplicationFolder(folderName);
 
     await Promise.all(
       Object.entries(documents).map(async ([docId, file]) => {
         const buffer = await fileToBuffer(file);
         const fileName = safeDriveName(`${refNumber}_${docId}_${file.name}`);
-
         return uploadFileToDrive({
           fileName,
           mimeType: file.type,
@@ -139,6 +156,7 @@ export async function POST(request) {
 
     await saveApplication(applicationData);
 
+    // Send confirmation email to applicant
     let emailSent = false;
     try {
       await sendApplicationConfirmation(
@@ -148,7 +166,17 @@ export async function POST(request) {
       );
       emailSent = true;
     } catch (emailError) {
-      console.error("Email send failed:", emailError);
+      console.error("Applicant confirmation email failed:", emailError);
+    }
+
+    // Send notification email to NMIS
+    try {
+      await sendApplicationNotificationToNMIS({
+        ...body,
+        refNumber,
+      });
+    } catch (emailError) {
+      console.error("NMIS notification email failed:", emailError);
     }
 
     return NextResponse.json(
