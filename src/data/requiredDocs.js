@@ -46,7 +46,7 @@ export const REQUIRED_DOCS = [
     id: "ownership_possession",
     name: "Proof of Ownership or Legal Possession",
     description: "Proof of ownership or legal possession of vehicle.",
-    required: true,
+    required: false,
   },
   {
     id: "health_certificates",

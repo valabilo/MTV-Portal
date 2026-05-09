@@ -13,7 +13,7 @@ function getDocName(doc) {
   return doc.label || doc.name || ''
 }
 
-export default function Step3Documents({ files, setFiles, agree, setAgree, onBack, onNext, showToast }) {
+export default function Step3Documents({ files, setFiles, agree, setAgree, onBack, onNext, showToast, isAmendment = false }) {
   function addFile(docId, file) {
     if (file.size > MAX_FILE_SIZE) {
       showToast('File too large. Maximum size is 5 MB.', true)
@@ -44,7 +44,9 @@ export default function Step3Documents({ files, setFiles, agree, setAgree, onBac
     <div className={styles.body}>
       <h2 className={styles.sectionTitle}>Documentary Requirements</h2>
       <p className={docStyles.intro}>
-        Upload scanned copies or clear photos of the required MTV registration documents.
+        {isAmendment
+          ? 'Upload only the corrected documents requested by NMIS.'
+          : 'Upload scanned copies or clear photos of the required MTV registration documents.'}
         Accepted formats: PDF, JPG, PNG. Maximum file size per document: 5 MB.
       </p>
 
@@ -52,7 +54,7 @@ export default function Step3Documents({ files, setFiles, agree, setAgree, onBac
         {REQUIRED_DOCS.map(doc => (
           <div key={doc.id} className={docStyles.docItem}>
             <label className={docStyles.docLabel}>
-              {getDocName(doc)} {doc.required ? <span className="req">*</span> : <span style={{ color: 'var(--gray-500)', fontWeight: 600 }}>(optional)</span>}
+              {getDocName(doc)} {doc.required && !isAmendment ? <span className="req">*</span> : <span style={{ color: 'var(--gray-500)', fontWeight: 600 }}>(optional)</span>}
             </label>
             <p className={docStyles.dropHint}>{doc.description}</p>
 

@@ -47,6 +47,14 @@ function columnLabel(index) {
   return label;
 }
 
+function normalizeHeader(header) {
+  return String(header)
+    .trim()
+    .toLowerCase()
+    .replace(/[^\w]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
 // ── Generic helpers ───────────────────────────────────────────────
 /**
  * Reads all rows from a sheet tab and returns them as objects.
@@ -64,9 +72,7 @@ export async function readSheet(sheetName) {
   const rows = response.data.values;
   if (!rows || rows.length < 2) return [];
 
-  const headers = rows[0].map((header) =>
-    String(header).trim().toLowerCase().replace(/\s+/g, "_"),
-  );
+  const headers = rows[0].map(normalizeHeader);
 
   return rows.slice(1).map((row) => {
     const obj = {};
@@ -75,6 +81,32 @@ export async function readSheet(sheetName) {
     });
     return obj;
   });
+}
+
+async function readSheetWithRowNumbers(sheetName) {
+  const sheets = getSheetsClient();
+  const response = await sheets.spreadsheets.values.get({
+    spreadsheetId: getSpreadsheetId(),
+    range: sheetName,
+  });
+
+  const rows = response.data.values;
+  if (!rows || rows.length < 1) return { headers: [], rows: [] };
+
+  const headers = rows[0].map(normalizeHeader);
+
+  if (rows.length < 2) return { headers, rows: [] };
+
+  return {
+    headers,
+    rows: rows.slice(1).map((row, index) => {
+      const obj = { _rowNumber: index + 2 };
+      headers.forEach((header, headerIndex) => {
+        obj[header] = row[headerIndex] ?? "";
+      });
+      return obj;
+    }),
+  };
 }
 
 /**
@@ -167,12 +199,17 @@ export async function ensureHeaders(sheetName, expectedHeaders) {
     "lto_client_id",
   ]);
 
+  const legacySheetHeaders = new Set(
+    sheetName === "Accredited" ? ["VALIDITY"] : [],
+  );
+
   const normalizedExpectedHeaders = new Set(expectedHeaders);
   const customHeaders = currentHeaders.filter(
     (header) =>
       header &&
       !normalizedExpectedHeaders.has(header) &&
-      !legacyApplicationHeaders.has(header),
+      !legacyApplicationHeaders.has(header) &&
+      !legacySheetHeaders.has(header),
   );
   const nextHeaders = [...expectedHeaders, ...customHeaders];
 
@@ -199,6 +236,70 @@ export async function getAccreditedList() {
 
 export async function getBannedList() {
   return readSheet("Banned");
+}
+
+export async function getGHPCompletions() {
+  return readSheet("GHP_Completions");
+}
+
+export async function getCertificateIssuance() {
+  return readSheet("Certificate Issuance");
+}
+
+export async function getReferenceIssuances() {
+  return readSheet("Reference Issuances");
+}
+
+export async function getEstablishmentTypes() {
+  const rows = await readSheet("EstablishmentType");
+  return rows
+    .filter((row) => String(row.active || "yes").trim().toLowerCase() !== "no")
+    .map((row, index) => ({
+      title: row.title || row.name || "",
+      description: row.description || row.details || "",
+      fileUrl: row.file_url || row.url || row.link || "",
+      type: row.type || "",
+      order: Number(row.order || row.sort_order || index + 1),
+    }))
+    .filter((item) => item.title)
+    .sort((a, b) => a.order - b.order);
+}
+
+export async function getEstablishmentNames() {
+  const rows = await readSheet("EstablishmentName");
+  return rows
+    .filter((row) => String(row.active || "yes").trim().toLowerCase() !== "no")
+    .map((row, index) => ({
+      title:
+        row.title ||
+        row.name ||
+        row.establishment_name ||
+        row.meat_establishment ||
+        "",
+      description: row.description || row.details || row.address || "",
+      type: row.type || row.establishment_type || "",
+      order: Number(row.order || row.sort_order || index + 1),
+    }))
+    .filter((item) => item.title)
+    .sort((a, b) => a.order - b.order);
+}
+
+export async function getApplications() {
+  const { rows } = await readSheetWithRowNumbers("Applications");
+  return rows;
+}
+
+export async function getApplicationByRef(refNumber) {
+  const normalizedRef = String(refNumber || "").trim().toUpperCase();
+  if (!normalizedRef) return null;
+
+  const { rows } = await readSheetWithRowNumbers("Applications");
+  return (
+    rows.find(
+      (row) =>
+        String(row.ref_number || "").trim().toUpperCase() === normalizedRef,
+    ) || null
+  );
 }
 
 /**
@@ -260,43 +361,309 @@ const APPLICATION_HEADERS = [
   "material",
   "meat_establishment",
   "intended_route",
+  "remarks",
+  "status_history",
+  "amendment_ref",
 ];
+
+function parseStatusHistory(value) {
+  if (!value) return [];
+
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function statusHistoryForRow(row) {
+  const history = parseStatusHistory(row.status_history);
+  if (history.length) return history;
+
+  return [
+    {
+      status: row.status || "Pending",
+      remarks: row.remarks || "Application submitted.",
+      timestamp: row.timestamp || new Date().toISOString(),
+    },
+  ];
+}
+
+function buildApplicationRowValues(headers, data, existing = {}, overrides = {}) {
+  const timestamp = overrides.timestamp ?? new Date().toISOString();
+  const status = overrides.status ?? "Pending";
+  const remarks = overrides.remarks ?? "";
+  const statusHistory =
+    overrides.statusHistory ??
+    JSON.stringify([
+      {
+        status,
+        remarks: "Application submitted.",
+        timestamp,
+      },
+    ]);
+
+  const valuesByHeader = {
+    ref_number: data.refNumber,
+    timestamp,
+    application_type: data.applicationType ?? "",
+    registered_owner: data.registeredOwner,
+    email: data.email,
+    contact: data.contact,
+    address: data.address,
+    region: data.region ?? "",
+    province: data.province ?? "",
+    ghp_cert_number: data.ghpCertNumber ?? "",
+    plate: data.plate,
+    vtype: data.vtype,
+    vmake: data.vmake,
+    vmodel: data.vmodel,
+    vyear: data.vyear,
+    capacity: data.capacity,
+    bname: data.bname || data.meatEstablishment || "",
+    btype: data.btype ?? "",
+    baddress: data.baddress || data.intendedRoute || "",
+    drive_folder_id: data.driveFolderId ?? existing.drive_folder_id ?? "",
+    status,
+    vcolor: data.vcolor ?? "",
+    vengine: data.vengine ?? "",
+    vchassis: data.vchassis ?? "",
+    cr_number: data.crNumber ?? "",
+    or_number: data.orNumber ?? "",
+    cooling: data.cooling ?? "",
+    material: data.material ?? "",
+    meat_establishment: data.meatEstablishment ?? "",
+    intended_route: data.intendedRoute ?? "",
+    remarks,
+    status_history: statusHistory,
+    amendment_ref: data.amendmentRef ?? existing.amendment_ref ?? "",
+  };
+
+  return headers.map((header) => valuesByHeader[header] ?? existing[header] ?? "");
+}
 
 export async function saveApplication(data) {
   await ensureHeaders("Applications", APPLICATION_HEADERS);
 
-  return appendRow("Applications", [
-    data.refNumber,
-    new Date().toISOString(),
-    data.applicationType ?? "",
-    data.registeredOwner,
-    data.email,
-    data.contact,
-    data.address,
-    data.region ?? "",
-    data.province ?? "",
-    data.ghpCertNumber ?? "",
-    data.plate,
-    data.vtype,
-    data.vmake,
-    data.vmodel,
-    data.vyear,
-    data.capacity,
-    data.bname || data.meatEstablishment || "",
-    data.btype ?? "",
-    data.baddress || data.intendedRoute || "",
-    data.driveFolderId ?? "",
+  return appendRow(
+    "Applications",
+    buildApplicationRowValues(APPLICATION_HEADERS, data),
+  );
+}
+
+export async function updateApplication(data) {
+  await ensureHeaders("Applications", APPLICATION_HEADERS);
+
+  const { headers, rows } = await readSheetWithRowNumbers("Applications");
+  if (!headers.length) throw new Error("Applications sheet is missing a header row.");
+
+  const normalizedRef = String(data.refNumber || "").trim().toUpperCase();
+  const existing = rows.find(
+    (row) => String(row.ref_number || "").trim().toUpperCase() === normalizedRef,
+  );
+  if (!existing) throw new Error("Application not found.");
+
+  const now = new Date().toISOString();
+  const previousHistory = statusHistoryForRow(existing);
+  const nextHistory = [
+    ...previousHistory,
+    {
+      status: "Pending",
+      previousStatus: existing.status || "Pending",
+      remarks: "Amendment submitted.",
+      timestamp: now,
+    },
+  ];
+  const rowValues = buildApplicationRowValues(headers, data, existing, {
+    timestamp: now,
+    status: "Pending",
+    remarks: "",
+    statusHistory: JSON.stringify(nextHistory),
+  });
+
+  const sheets = getSheetsClient();
+  await sheets.spreadsheets.values.update({
+    spreadsheetId: getSpreadsheetId(),
+    range: `${quoteSheetName("Applications")}!A${existing._rowNumber}:${columnLabel(headers.length)}${existing._rowNumber}`,
+    valueInputOption: "USER_ENTERED",
+    requestBody: {
+      values: [rowValues],
+    },
+  });
+
+  return {
+    ...existing,
+    ...Object.fromEntries(headers.map((header, index) => [header, rowValues[index] ?? ""])),
+  };
+}
+
+export async function updateApplicationStatus(refNumber, status, remarks = "") {
+  const allowedStatuses = new Set([
     "Pending",
-    data.vcolor ?? "",
-    data.vengine ?? "",
-    data.vchassis ?? "",
-    data.crNumber ?? "",
-    data.orNumber ?? "",
-    data.cooling ?? "",
-    data.material ?? "",
-    data.meatEstablishment ?? "",
-    data.intendedRoute ?? "",
+    "For Review",
+    "Under Review",
+    "For Inspection",
+    "Approved",
+    "Released",
+    "Completed",
+    "Rejected",
+    "Denied",
   ]);
+
+  if (!allowedStatuses.has(status)) {
+    throw new Error("Invalid application status.");
+  }
+
+  await ensureHeaders("Applications", APPLICATION_HEADERS);
+  const { headers, rows } = await readSheetWithRowNumbers("Applications");
+  const statusIndex = headers.indexOf("status");
+  if (statusIndex < 0) throw new Error("Applications sheet is missing a status column.");
+  const remarksIndex = headers.indexOf("remarks");
+  const historyIndex = headers.indexOf("status_history");
+
+  const normalizedRef = String(refNumber || "").trim().toUpperCase();
+  const row = rows.find(
+    (item) => String(item.ref_number || "").trim().toUpperCase() === normalizedRef,
+  );
+
+  if (!row) throw new Error("Application not found.");
+
+  const sheets = getSheetsClient();
+  const spreadsheetId = getSpreadsheetId();
+  const trimmedRemarks = String(remarks || "").trim();
+  const previousHistory = statusHistoryForRow(row);
+  const statusEntry = {
+    status,
+    previousStatus: row.status || "Pending",
+    remarks: trimmedRemarks,
+    timestamp: new Date().toISOString(),
+  };
+  const nextHistory = [...previousHistory, statusEntry];
+
+  const data = [
+    {
+      range: `${quoteSheetName("Applications")}!${columnLabel(statusIndex + 1)}${row._rowNumber}`,
+      values: [[status]],
+    },
+  ];
+
+  if (remarksIndex >= 0) {
+    data.push({
+      range: `${quoteSheetName("Applications")}!${columnLabel(remarksIndex + 1)}${row._rowNumber}`,
+      values: [[trimmedRemarks]],
+    });
+  }
+
+  if (historyIndex >= 0) {
+    data.push({
+      range: `${quoteSheetName("Applications")}!${columnLabel(historyIndex + 1)}${row._rowNumber}`,
+      values: [[JSON.stringify(nextHistory)]],
+    });
+  }
+
+  await sheets.spreadsheets.values.batchUpdate({
+    spreadsheetId,
+    requestBody: {
+      valueInputOption: "USER_ENTERED",
+      data,
+    },
+  });
+
+  const updated = {
+    ...row,
+    previousStatus: row.status || "Pending",
+    remarks: trimmedRemarks,
+    status,
+    status_history: JSON.stringify(nextHistory),
+  };
+  return updated;
+}
+
+const ACCREDITED_HEADERS = [
+  "DATE ISSUED",
+  "NAME OF OWNER",
+  "ADDRESS",
+  "ESTABLISHMENT TYPE",
+  "ESTABLISHMENT NAME",
+  "PLATE NO.",
+  "REGISTRATION NO.",
+  "EXPIRY",
+  "RECEIPT NO.",
+  "STATUS",
+  "REMARKS",
+];
+
+export async function upsertAccreditedFromApplication(application) {
+  await ensureHeaders("Accredited", ACCREDITED_HEADERS);
+
+  const { headers, rows } = await readSheetWithRowNumbers("Accredited");
+  if (!headers.length) {
+    throw new Error("Accredited sheet is missing a header row.");
+  }
+
+  const normalizedRef = String(application.ref_number || "").trim().toUpperCase();
+  const normalizedPlate = String(application.plate || "").trim().toUpperCase();
+  const existing = rows.find((row) => {
+    const rowRef = String(row.ref_number || row.registration_no || "").trim().toUpperCase();
+    const rowPlate = String(row.plate || row.plate_no || row.plate_number || "")
+      .trim()
+      .toUpperCase();
+
+    return (normalizedRef && rowRef === normalizedRef) || (normalizedPlate && rowPlate === normalizedPlate);
+  });
+
+  const now = new Date();
+  const expiry = new Date(now);
+  expiry.setFullYear(now.getFullYear() + 1);
+
+  const valuesByHeader = {
+    date_issued: now.toISOString().slice(0, 10),
+    name_of_owner: application.registered_owner || "",
+    address: application.address || "",
+    establishment_type: application.btype || "",
+    establishment_name: application.bname || application.meat_establishment || "",
+    plate_no: application.plate || "",
+    registration_no: application.ref_number || "",
+    expiry: expiry.toISOString().slice(0, 10),
+    receipt_no: "",
+    status: "Active",
+    ref_number: application.ref_number || "",
+    plate: application.plate || "",
+    business: application.bname || application.meat_establishment || "",
+    business_name: application.bname || application.meat_establishment || "",
+    type: application.btype || "",
+    vehicle_type: application.vtype || "",
+    owner: application.registered_owner || "",
+    applicant: application.registered_owner || "",
+    expiry: expiry.toISOString().slice(0, 10),
+    expiry_date: expiry.toISOString().slice(0, 10),
+    expiration_date: expiry.toISOString().slice(0, 10),
+    valid_until: expiry.toISOString().slice(0, 10),
+    status: "Active",
+    approved_at: now.toISOString(),
+    email: application.email || "",
+    contact: application.contact || "",
+    ghp_cert_number: application.ghp_cert_number || "",
+  };
+
+  const rowValues = headers.map((header) => valuesByHeader[header] ?? existing?.[header] ?? "");
+  const sheets = getSheetsClient();
+  const spreadsheetId = getSpreadsheetId();
+
+  if (existing) {
+    await sheets.spreadsheets.values.update({
+      spreadsheetId,
+      range: `${quoteSheetName("Accredited")}!A${existing._rowNumber}:${columnLabel(headers.length)}${existing._rowNumber}`,
+      valueInputOption: "USER_ENTERED",
+      requestBody: {
+        values: [rowValues],
+      },
+    });
+    return;
+  }
+
+  await appendRow("Accredited", rowValues);
 }
 
 /**

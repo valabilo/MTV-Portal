@@ -20,10 +20,12 @@ function ReviewRow({ label, value }) {
   )
 }
 
-export default function Step4Review({ data, files, submitting, onBack, onSubmit }) {
+export default function Step4Review({ data, files, submitting, onBack, onSubmit, isAmendment = false }) {
   return (
     <div className={styles.body}>
-      <h2 className={styles.sectionTitle}>Review Your Application</h2>
+      <h2 className={styles.sectionTitle}>
+        {isAmendment ? 'Review Your Amendment' : 'Review Your Application'}
+      </h2>
 
       <div className={rStyles.grid}>
         <div className={rStyles.block}>
@@ -42,12 +44,15 @@ export default function Step4Review({ data, files, submitting, onBack, onSubmit 
           <ReviewRow label="Plate No." value={data.plate} />
           <ReviewRow label="Type" value={data.vtype} />
           <ReviewRow label="Make / Model" value={`${data.vmake} ${data.vmodel} (${data.vyear})`} />
+          <ReviewRow label="CR Number" value={data.crNumber} />
+          <ReviewRow label="OR Number" value={data.orNumber} />
           <ReviewRow label="Engine / Chassis" value={`${data.vengine || '-'} / ${data.vchassis || '-'}`} />
           <ReviewRow label="Capacity" value={data.capacity ? `${data.capacity} kg` : ''} />
         </div>
 
         <div className={rStyles.block}>
           <h3 className={rStyles.blockTitle}>Business Information</h3>
+          <ReviewRow label="Business Type" value={data.btype} />
           <ReviewRow label="Accredited Meat Establishment to be served" value={data.meatEstablishment} />
           <ReviewRow label="Destination (major markets to be served)" value={data.intendedRoute} />
         </div>
@@ -64,13 +69,15 @@ export default function Step4Review({ data, files, submitting, onBack, onSubmit 
                 key={doc.id}
                 className={`tag ${files[doc.id] ? 'tag-active' : 'tag-pending'}`}
               >
-                {files[doc.id] ? 'Attached' : doc.required ? 'Missing' : 'Optional'}: {docName}
+                {files[doc.id] ? 'Attached' : doc.required && !isAmendment ? 'Missing' : 'Optional'}: {docName}
               </span>
             )
           })}
         </div>
         <p style={{ fontSize: '.82rem', color: 'var(--gray-500)', marginTop: 10 }}>
-          All attached documents will be saved to the NMIS Google Drive folder.
+          {isAmendment
+            ? 'Attached documents will be added to the existing NMIS Google Drive folder.'
+            : 'All attached documents will be saved to the NMIS Google Drive folder.'}
         </p>
       </div>
 
@@ -79,7 +86,7 @@ export default function Step4Review({ data, files, submitting, onBack, onSubmit 
           Back
         </button>
         <button className="btn btn-primary" onClick={onSubmit} disabled={submitting}>
-          {submitting ? 'Submitting...' : 'Submit Application'}
+          {submitting ? 'Submitting...' : isAmendment ? 'Submit Amendment' : 'Submit Application'}
         </button>
       </div>
     </div>

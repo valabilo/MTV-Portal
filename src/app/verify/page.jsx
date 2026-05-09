@@ -17,11 +17,17 @@ function VerifyContent() {
   const { toastState, showToast } = useToast();
 
   const columns = [
-    { key: "plate", label: "Plate No.", render: (v) => <strong>{v}</strong> },
-    { key: "business", label: "Business Name" },
-    { key: "type", label: "Vehicle Type" },
+    { key: "reference", label: "Registration No.", className: "noWrap" },
+    {
+      key: "plate",
+      label: "Plate No.",
+      className: "noWrap",
+      render: (v) => <strong>{v}</strong>,
+    },
+    { key: "business", label: "Establishment Name" },
     { key: "owner", label: "Owner" },
-    { key: "expiry", label: "Expiry Date" },
+    { key: "dateIssued", label: "Date Issued", className: "noWrap" },
+    { key: "expiry", label: "Expiry Date", className: "noWrap" },
     {
       key: "status",
       label: "Status",
@@ -63,7 +69,8 @@ function VerifyContent() {
 
 export default function VerifyPage() {
   return (
-    <Suspense fallback={<div className="spinner" style={{ margin: "80px auto" }} />}>
+    <Suspense
+      fallback={<div className="spinner" style={{ margin: "80px auto" }} />}>
       <VerifyContent />
     </Suspense>
   );

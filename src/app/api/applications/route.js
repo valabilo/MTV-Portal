@@ -12,7 +12,8 @@
  */
 
 import { NextResponse } from "next/server";
-import { saveApplication } from "@/lib/googleSheets";
+import { saveApplication, updateApplication } from "@/lib/googleSheets";
+import { deleteReplacedApplicationFiles } from "@/lib/driveService";
 import {
   sendApplicationConfirmation,
   sendApplicationNotificationToNMIS,
@@ -36,6 +37,7 @@ export async function POST(request) {
 
   try {
     const body = await request.json();
+    const siteUrl = request.nextUrl.origin;
 
     submissionId = String(body.submissionId || "");
 
@@ -73,13 +75,33 @@ export async function POST(request) {
       );
     }
 
+    const isAmendment =
+      sanitized.applicationType === "Amendment" || Boolean(sanitized.amendmentRef);
+
     const applicationData = {
       ...sanitized,
       refNumber,
       driveFolderId: folderId,
+      amendmentRef: isAmendment ? refNumber : sanitized.amendmentRef,
     };
 
-    await saveApplication(applicationData);
+    if (isAmendment) {
+      const amendedDocIds = uploadedFiles.map((file) => file.docId).filter(Boolean);
+      const uploadedFileIds = uploadedFiles.map((file) => file.fileId).filter(Boolean);
+
+      if (amendedDocIds.length) {
+        await deleteReplacedApplicationFiles({
+          folderId,
+          refNumber,
+          docIds: amendedDocIds,
+          keepFileIds: uploadedFileIds,
+        });
+      }
+
+      await updateApplication(applicationData);
+    } else {
+      await saveApplication(applicationData);
+    }
 
     // Send confirmation email to applicant
     let emailSent = false;
@@ -88,6 +110,7 @@ export async function POST(request) {
         sanitized.email,
         refNumber,
         sanitized.registeredOwner,
+        { siteUrl },
       );
       emailSent = true;
     } catch (emailError) {
@@ -100,6 +123,7 @@ export async function POST(request) {
         ...sanitized,
         refNumber,
         uploadedFiles,
+        siteUrl,
       });
     } catch (emailError) {
       console.error("NMIS notification email failed:", emailError);
@@ -108,7 +132,9 @@ export async function POST(request) {
     return NextResponse.json(
       {
         success: true,
-        message: "Application submitted successfully",
+        message: isAmendment
+          ? "Application amendment submitted successfully"
+          : "Application submitted successfully",
         refNumber,
         emailSent,
       },

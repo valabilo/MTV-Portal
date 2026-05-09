@@ -1,11 +1,13 @@
 import styles from "./SuccessView.module.css";
 
-export default function SuccessView({ refNumber, onReset }) {
+export default function SuccessView({ refNumber, onReset, isAmendment = false }) {
   return (
     <div className={styles.card}>
-      <h2>Application Submitted</h2>
+      <h2>{isAmendment ? "Amendment Submitted" : "Application Submitted"}</h2>
       <p>
-        Your MTV accreditation application has been successfully submitted.
+        {isAmendment
+          ? "Your MTV accreditation amendment has been successfully submitted."
+          : "Your MTV accreditation application has been successfully submitted."}
         Please keep your reference number for tracking purposes.
       </p>
 
@@ -26,7 +28,7 @@ export default function SuccessView({ refNumber, onReset }) {
           Track Status
         </a>
         <button className="btn btn-outline" onClick={onReset}>
-          Submit Another
+          {isAmendment ? "Submit Another Application" : "Submit Another"}
         </button>
       </div>
     </div>

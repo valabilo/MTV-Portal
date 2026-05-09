@@ -1,13 +1,16 @@
-/**
- * components/layout/Footer.jsx
- */
+"use client";
 
 import { COPYRIGHT, NAV_ITEMS, OFFICE_INFO } from "@/lib/constants";
+import { usePathname } from "next/navigation";
 import styles from "./Footer.module.css";
 import Image from "next/image";
 import Link from "next/link";
 
 export default function Footer() {
+  const pathname = usePathname();
+
+  if (pathname?.startsWith("/dashboard")) return null;
+
   return (
     <footer className={styles.footer}>
       <div className={`container ${styles.footerGrid}`}>

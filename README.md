@@ -79,7 +79,7 @@ Create these tabs in the spreadsheet connected to `GOOGLE_SHEET_ID`.
 ### `Accredited`
 
 ```txt
-plate | business | type | owner | expiry | status
+DATE ISSUED | NAME OF OWNER | ADDRESS | TEL NO. | ESTABLISHMENT NAME | PLATE NO. | REGISTRATION  NO. | STICKER NO. | EXPIRY | RECEIPT DATE | RECEIPT NO. | VALID | REMARKS
 ```
 
 ### `Banned`

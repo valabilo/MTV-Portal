@@ -31,6 +31,8 @@ export default function Header() {
     setMenuOpen(false);
   }, [pathname]);
 
+  if (pathname?.startsWith("/dashboard")) return null;
+
   function resolveSearchType(query) {
     const normalized = query.trim().toUpperCase();
 

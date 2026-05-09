@@ -41,6 +41,7 @@ export const APPLICATION_FIELDS = [
   "btype",
   "baddress",
   "ghpCertNumber",
+  "amendmentRef",
 ];
 
 function cleanValue(value, key) {
@@ -74,7 +75,10 @@ export function validateApplicationFields(data) {
     "vmake",
     "vmodel",
     "vyear",
+    "crNumber",
+    "orNumber",
     "capacity",
+    "btype",
     "meatEstablishment",
     "intendedRoute",
   ].filter((field) => !data[field]);

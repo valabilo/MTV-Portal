@@ -77,6 +77,57 @@ export async function uploadFileToDrive({
   };
 }
 
+export async function listFolderFiles(folderId) {
+  if (!folderId) return [];
+
+  const drive = getDriveClient();
+  const res = await drive.files.list({
+    q: `'${folderId}' in parents and trashed = false`,
+    fields: "files(id, name, mimeType, webViewLink, webContentLink, modifiedTime)",
+    orderBy: "name",
+    pageSize: 100,
+  });
+
+  return (res.data.files || []).map((file) => ({
+    id: file.id,
+    name: file.name,
+    mimeType: file.mimeType,
+    webViewLink: file.webViewLink || "",
+    webContentLink: file.webContentLink || "",
+    modifiedTime: file.modifiedTime || "",
+  }));
+}
+
+export async function deleteReplacedApplicationFiles({
+  folderId,
+  refNumber,
+  docIds = [],
+  keepFileIds = [],
+}) {
+  if (!folderId || !refNumber || !docIds.length) return [];
+
+  const keepSet = new Set(keepFileIds.filter(Boolean));
+  const docPrefixes = docIds.map((docId) => `${refNumber}_${docId}_`);
+  const files = await listFolderFiles(folderId);
+  const targets = files.filter(
+    (file) =>
+      !keepSet.has(file.id) &&
+      docPrefixes.some((prefix) => file.name.startsWith(prefix)),
+  );
+  const drive = getDriveClient();
+
+  await Promise.all(
+    targets.map((file) =>
+      drive.files.update({
+        fileId: file.id,
+        requestBody: { trashed: true },
+      }),
+    ),
+  );
+
+  return targets;
+}
+
 /**
  * Converts a base64 data URL (from FileReader.readAsDataURL) to a Buffer
  * and extracts the MIME type.

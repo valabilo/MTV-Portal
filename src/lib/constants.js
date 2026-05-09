@@ -49,7 +49,7 @@ export const ACCEPTED_MIME_TYPES = [
 export const DEMO_FAQS = [
   {
     q: "How long does the accreditation process take?",
-    a: "The accreditation process typically takes 5-10 working days after submission of complete requirements.",
+    a: "The accreditation process typically takes 1-3 working days after submission of complete requirements.",
   },
   {
     q: "What is the validity of the MTV Certificate of Registration?",

@@ -7,12 +7,59 @@ import nodemailer from "nodemailer";
 
 let transporter = null;
 
+function normalizeSiteUrl(siteUrl) {
+  const value = String(siteUrl || process.env.NEXT_PUBLIC_SITE_URL || "").trim();
+  const fallback = "https://your-portal-url.com";
+
+  return (value || fallback).replace(/\/+$/, "");
+}
+
+function formatMailAddress(name, address) {
+  const cleanAddress = String(address || "").trim();
+  const cleanName = String(name || "").trim();
+
+  if (!cleanAddress) return undefined;
+  if (!cleanName) return cleanAddress;
+
+  return {
+    name: cleanName,
+    address: cleanAddress,
+  };
+}
+
+function getSenderName() {
+  return process.env.GMAIL_FROM_NAME || "MTV Portal";
+}
+
+function getSenderAddress(authUser) {
+  return (
+    process.env.CONTACT_RECIPIENT_EMAIL ||
+    process.env.NMIS_CONTACT_EMAIL ||
+    authUser ||
+    process.env.GMAIL_USER ||
+    process.env.EMAIL_USER
+  );
+}
+
+function getDefaultSender() {
+  return formatMailAddress(getSenderName(), getSenderAddress());
+}
+
+function getOfficeRecipient() {
+  const recipient =
+    process.env.CONTACT_RECIPIENT_EMAIL ||
+    process.env.NMIS_CONTACT_EMAIL ||
+    process.env.GMAIL_USER ||
+    process.env.EMAIL_USER;
+
+  return formatMailAddress(getSenderName(), recipient);
+}
+
 function getTransporter() {
   if (transporter) return transporter;
 
   const user = process.env.GMAIL_USER || process.env.EMAIL_USER;
   const pass = process.env.GMAIL_APP_PASSWORD || process.env.EMAIL_PASS;
-  const fromName = process.env.GMAIL_FROM_NAME || "MTV Portal";
 
   if (!user || !pass) {
     throw new Error(
@@ -24,7 +71,7 @@ function getTransporter() {
     service: "gmail",
     auth: { user, pass },
     defaults: {
-      from: `"${fromName}" <${user}>`,
+      from: formatMailAddress(getSenderName(), getSenderAddress(user)),
     },
   });
 
@@ -35,11 +82,14 @@ export async function sendApplicationConfirmation(
   email,
   refNumber,
   applicantName,
+  options = {},
 ) {
   const transport = getTransporter();
+  const siteUrl = normalizeSiteUrl(options.siteUrl);
 
   return transport.sendMail({
-    to: email,
+    from: getDefaultSender(),
+    to: formatMailAddress(applicantName, email),
     subject: `MTV Application Confirmation - ${refNumber}`,
     html: `
       <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;background:#f9f9f9;">
@@ -54,8 +104,8 @@ export async function sendApplicationConfirmation(
             <p style="margin:6px 0 0;font-size:24px;font-weight:bold;color:#1a5c32;letter-spacing:2px;">${refNumber}</p>
           </div>
           <p>Please keep this reference number for tracking your application status.</p>
-          <p>Our team will review your documents and notify you of any updates. Processing typically takes <strong>5–10 working days</strong> after submission of complete requirements.</p>
-          <p>You can track your application status at any time by visiting the <a href="${process.env.NEXT_PUBLIC_SITE_URL || "https://your-portal-url.com"}/application-status?ref=${refNumber}" style="color:#1a5c32;font-weight:bold;">Application Status page</a>.</p>
+          <p>Our team will review your documents and notify you of any updates. Processing typically takes <strong>1-3 working days</strong> after submission of complete requirements.</p>
+          <p>You can track your application status at any time by visiting the <a href="${siteUrl}/application-status?ref=${encodeURIComponent(refNumber)}" style="color:#1a5c32;font-weight:bold;">Application Status page</a>.</p>
           <hr style="border:none;border-top:1px solid #eee;margin:24px 0;"/>
           <p style="font-size:13px;color:#888;">If you did not submit this application, please contact us immediately at <a href="mailto:rtoc3@nmis.gov.ph">rtoc3@nmis.gov.ph</a>.</p>
           <p style="margin-top:24px;">Best regards,<br/><strong>NMIS Regional Technical Operation Center III</strong><br/>San Fernando, Pampanga</p>
@@ -67,11 +117,7 @@ export async function sendApplicationConfirmation(
 
 export async function sendApplicationNotificationToNMIS(applicationData) {
   const transport = getTransporter();
-  const recipient =
-    process.env.CONTACT_RECIPIENT_EMAIL ||
-    process.env.NMIS_CONTACT_EMAIL ||
-    process.env.GMAIL_USER ||
-    process.env.EMAIL_USER;
+  const recipient = getOfficeRecipient();
 
   if (!recipient) {
     throw new Error("Missing CONTACT_RECIPIENT_EMAIL or Gmail sender address.");
@@ -113,8 +159,9 @@ export async function sendApplicationNotificationToNMIS(applicationData) {
   } = applicationData;
 
   return transport.sendMail({
+    from: getDefaultSender(),
     to: recipient,
-    replyTo: email,
+    replyTo: formatMailAddress(registeredOwner, email),
     subject: `[MTV Portal] New Application Submitted – ${refNumber}`,
     html: `
       <div style="font-family:Arial,sans-serif;max-width:650px;margin:0 auto;padding:24px;background:#f9f9f9;">
@@ -179,11 +226,137 @@ export async function sendApplicationNotificationToNMIS(applicationData) {
   });
 }
 
+export async function sendApplicationStatusUpdateToApplicant(applicationData) {
+  const transport = getTransporter();
+  const {
+    reference,
+    registeredOwner,
+    email,
+    status,
+    previousStatus,
+    remarks,
+    plate,
+    businessName,
+    siteUrl: applicationSiteUrl,
+  } = applicationData;
+  const siteUrl = normalizeSiteUrl(applicationSiteUrl);
+  const amendmentUrl = `${siteUrl}/apply?amend=${encodeURIComponent(reference)}`;
+  const showAmendmentLink = ["Rejected", "Denied"].includes(status);
+
+  if (!email) {
+    throw new Error("Applicant email address is missing.");
+  }
+
+  return transport.sendMail({
+    from: getDefaultSender(),
+    to: formatMailAddress(registeredOwner, email),
+    subject: `MTV Application Status Updated - ${reference}`,
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;background:#f9f9f9;">
+        <div style="background:#1a5c32;padding:20px 24px;border-radius:8px 8px 0 0;">
+          <h1 style="color:#ffffff;margin:0;font-size:20px;">MTV Application Status Updated</h1>
+        </div>
+        <div style="background:#ffffff;padding:24px;border:1px solid #e0e0e0;border-top:none;border-radius:0 0 8px 8px;">
+          <p>Dear <strong>${registeredOwner || "Applicant"}</strong>,</p>
+          <p>Your MTV application status has been updated by NMIS RTOC III.</p>
+          <div style="background:#e6f2ec;border:1px solid #cfe5d8;border-radius:8px;padding:16px;margin:20px 0;">
+            <p style="margin:0 0 8px;font-size:13px;color:#555;">Reference Number</p>
+            <p style="margin:0 0 14px;font-size:22px;font-weight:bold;color:#1a5c32;letter-spacing:1px;">${reference}</p>
+            <p style="margin:0;font-size:14px;color:#555;">Previous Status: <strong>${previousStatus || "Pending"}</strong></p>
+            <p style="margin:8px 0 0;font-size:16px;color:#1a5c32;">New Status: <strong>${status}</strong></p>
+          </div>
+          <table style="width:100%;border-collapse:collapse;font-size:14px;margin-bottom:20px;">
+            <tr><td style="padding:6px 0;color:#888;width:38%;">Plate Number</td><td style="padding:6px 0;">${plate || "Not provided"}</td></tr>
+            <tr><td style="padding:6px 0;color:#888;">Business Name</td><td style="padding:6px 0;">${businessName || "Not provided"}</td></tr>
+          </table>
+          ${
+            remarks
+              ? `<div style="background:#fff8e1;border:1px solid #ffe082;border-radius:8px;padding:14px;margin-bottom:18px;"><p style="margin:0 0 6px;font-weight:bold;color:#795548;">Remarks</p><p style="margin:0;color:#555;">${remarks}</p></div>`
+              : ""
+          }
+          ${
+            showAmendmentLink
+              ? `<div style="background:#fde8e6;border:1px solid #f5b7b1;border-radius:8px;padding:14px;margin-bottom:18px;"><p style="margin:0 0 10px;color:#7b241c;">Please amend the required information or documents and resubmit your MTV application.</p><a href="${amendmentUrl}" style="display:inline-block;background:#1a5c32;color:#ffffff;text-decoration:none;font-weight:bold;padding:10px 14px;border-radius:6px;">Open amendment form</a></div>`
+              : ""
+          }
+          <p>You can view your latest application status at the <a href="${siteUrl}/application-status?ref=${encodeURIComponent(reference)}" style="color:#1a5c32;font-weight:bold;">Application Status page</a>.</p>
+          <p style="margin-top:24px;">Best regards,<br/><strong>NMIS Regional Technical Operation Center III</strong><br/>San Fernando, Pampanga</p>
+        </div>
+      </div>
+    `,
+  });
+}
+
+export async function sendApplicationStatusUpdateToNMIS(applicationData) {
+  const transport = getTransporter();
+  const recipient = getOfficeRecipient();
+
+  if (!recipient) {
+    throw new Error("Missing CONTACT_RECIPIENT_EMAIL or Gmail sender address.");
+  }
+
+  const {
+    reference,
+    registeredOwner,
+    email,
+    contact,
+    status,
+    previousStatus,
+    remarks,
+    plate,
+    vehicleType,
+    businessName,
+    folderUrl,
+  } = applicationData;
+
+  return transport.sendMail({
+    from: getDefaultSender(),
+    to: recipient,
+    replyTo: formatMailAddress(registeredOwner, email),
+    subject: `[MTV Portal] Application Status Updated - ${reference}`,
+    html: `
+      <div style="font-family:Arial,sans-serif;max-width:650px;margin:0 auto;padding:24px;background:#f9f9f9;">
+        <div style="background:#1a5c32;padding:20px 24px;border-radius:8px 8px 0 0;">
+          <h1 style="color:#ffffff;margin:0;font-size:20px;">MTV Application Status Update</h1>
+        </div>
+        <div style="background:#ffffff;padding:24px;border:1px solid #e0e0e0;border-top:none;border-radius:0 0 8px 8px;">
+          <div style="background:#e6f2ec;border-radius:8px;padding:16px;margin-bottom:22px;">
+            <p style="margin:0;font-size:13px;color:#555;">Reference Number</p>
+            <p style="margin:4px 0 12px;font-size:22px;font-weight:bold;color:#1a5c32;letter-spacing:1px;">${reference}</p>
+            <p style="margin:0;font-size:14px;color:#555;">Previous Status: <strong>${previousStatus || "Pending"}</strong></p>
+            <p style="margin:8px 0 0;font-size:16px;color:#1a5c32;">New Status: <strong>${status}</strong></p>
+          </div>
+          <table style="width:100%;border-collapse:collapse;font-size:14px;margin-bottom:20px;">
+            <tr><td style="padding:6px 0;color:#888;width:40%;">Registered Owner</td><td style="padding:6px 0;font-weight:bold;">${registeredOwner || "Not provided"}</td></tr>
+            <tr><td style="padding:6px 0;color:#888;">Email</td><td style="padding:6px 0;">${email ? `<a href="mailto:${email}">${email}</a>` : "Not provided"}</td></tr>
+            <tr><td style="padding:6px 0;color:#888;">Contact Number</td><td style="padding:6px 0;">${contact || "Not provided"}</td></tr>
+            <tr><td style="padding:6px 0;color:#888;">Plate Number</td><td style="padding:6px 0;">${plate || "Not provided"}</td></tr>
+            <tr><td style="padding:6px 0;color:#888;">Vehicle Type</td><td style="padding:6px 0;">${vehicleType || "Not provided"}</td></tr>
+            <tr><td style="padding:6px 0;color:#888;">Business Name</td><td style="padding:6px 0;">${businessName || "Not provided"}</td></tr>
+          </table>
+          ${
+            remarks
+              ? `<div style="background:#fff8e1;border:1px solid #ffe082;border-radius:8px;padding:14px;margin-bottom:18px;"><p style="margin:0 0 6px;font-weight:bold;color:#795548;">Admin Remarks</p><p style="margin:0;color:#555;">${remarks}</p></div>`
+              : ""
+          }
+          ${
+            folderUrl
+              ? `<p><a href="${folderUrl}" style="color:#1a5c32;font-weight:bold;">Open application documents in Google Drive</a></p>`
+              : ""
+          }
+          <p style="margin-top:24px;font-size:13px;color:#888;">This is an automated notification from the MTV Portal System.</p>
+        </div>
+      </div>
+    `,
+  });
+}
+
 export async function sendGHPCompletion(email, name, certNumber, score) {
   const transport = getTransporter();
 
   return transport.sendMail({
-    to: email,
+    from: getDefaultSender(),
+    to: formatMailAddress(name, email),
     subject: `GHP Certificate - ${certNumber}`,
     html: `
       <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;background:#f9f9f9;">
@@ -207,7 +380,8 @@ export async function sendVerificationResult(email, name, plate, status) {
   const transport = getTransporter();
 
   return transport.sendMail({
-    to: email,
+    from: getDefaultSender(),
+    to: formatMailAddress(name, email),
     subject: `Vehicle Verification Result - ${plate}`,
     html: `
       <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;">
@@ -225,6 +399,7 @@ export async function sendContactReply(email, subject, message) {
   const transport = getTransporter();
 
   return transport.sendMail({
+    from: getDefaultSender(),
     to: email,
     subject: `Re: ${subject}`,
     html: `
@@ -251,19 +426,16 @@ export async function sendContactNotification({
   message,
 }) {
   const transport = getTransporter();
-  const recipient =
-    process.env.CONTACT_RECIPIENT_EMAIL ||
-    process.env.NMIS_CONTACT_EMAIL ||
-    process.env.GMAIL_USER ||
-    process.env.EMAIL_USER;
+  const recipient = getOfficeRecipient();
 
   if (!recipient) {
     throw new Error("Missing CONTACT_RECIPIENT_EMAIL or Gmail sender address.");
   }
 
   return transport.sendMail({
+    from: getDefaultSender(),
     to: recipient,
-    replyTo: email,
+    replyTo: formatMailAddress(name, email),
     subject: `MTV Portal Contact: ${subject}`,
     html: `
       <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;background:#f9f9f9;">

@@ -20,7 +20,25 @@ const MATERIALS = [
   "Polyurethane Foam",
 ];
 
-export default function Step2Vehicle({ data, onChange, onBack, onNext }) {
+export default function Step2Vehicle({
+  data,
+  onChange,
+  onBack,
+  onNext,
+  establishmentTypes = [],
+  establishmentNames = [],
+  loadingEstablishmentTypes = false,
+  loadingEstablishmentNames = false,
+}) {
+  const selectedBusinessType = data.btype || "";
+  const selectedEstablishment = data.meatEstablishment || "";
+  const hasSelectedBusinessType =
+    selectedBusinessType &&
+    !establishmentTypes.some((item) => item.title === selectedBusinessType);
+  const hasSelectedEstablishment =
+    selectedEstablishment &&
+    !establishmentNames.some((item) => item.title === selectedEstablishment);
+
   const f = (id, type = "text") => ({
     id,
     type,
@@ -101,14 +119,18 @@ export default function Step2Vehicle({ data, onChange, onBack, onNext }) {
           <input placeholder="Chassis number" {...f("vchassis")} />
         </div>
         <div className="form-group">
-          <label htmlFor="crNumber">CR Number</label>
+          <label htmlFor="crNumber">
+            CR Number <span className="req">*</span>
+          </label>
           <input
             placeholder="Certificate of Registration no."
             {...f("crNumber")}
           />
         </div>
         <div className="form-group">
-          <label htmlFor="orNumber">OR Number</label>
+          <label htmlFor="orNumber">
+            OR Number <span className="req">*</span>
+          </label>
           <input placeholder="Official Receipt no." {...f("orNumber")} />
         </div>
       </div>
@@ -151,14 +173,55 @@ export default function Step2Vehicle({ data, onChange, onBack, onNext }) {
       </h2>
       <div className="form-grid">
         <div className="form-group">
+          <label htmlFor="btype">
+            Business Type <span className="req">*</span>
+          </label>
+          <select
+            id="btype"
+            value={data.btype}
+            onChange={(e) => onChange("btype", e.target.value)}
+            disabled={loadingEstablishmentTypes}>
+            <option value="">
+              {loadingEstablishmentTypes
+                ? "Loading business types..."
+                : "-- Select Business Type --"}
+            </option>
+            {hasSelectedBusinessType ? (
+              <option value={selectedBusinessType}>{selectedBusinessType}</option>
+            ) : null}
+            {establishmentTypes.map((item) => (
+              <option key={item.title} value={item.title}>
+                {item.title}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="form-group">
           <label htmlFor="meatEstablishment">
             Accredited Meat Establishment to be served{" "}
             <span className="req">*</span>
           </label>
-          <input
-            placeholder="Name of accredited meat establishment"
-            {...f("meatEstablishment")}
-          />
+          <select
+            id="meatEstablishment"
+            value={data.meatEstablishment}
+            onChange={(e) => onChange("meatEstablishment", e.target.value)}
+            disabled={loadingEstablishmentNames}>
+            <option value="">
+              {loadingEstablishmentNames
+                ? "Loading establishments..."
+                : "-- Select Meat Establishment --"}
+            </option>
+            {hasSelectedEstablishment ? (
+              <option value={selectedEstablishment}>
+                {selectedEstablishment}
+              </option>
+            ) : null}
+            {establishmentNames.map((item) => (
+              <option key={item.title} value={item.title}>
+                {item.title}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="form-group">
           <label htmlFor="intendedRoute">

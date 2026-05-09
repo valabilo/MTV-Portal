@@ -15,6 +15,16 @@ function firstValue(row, keys) {
   return ''
 }
 
+function statusValue(row) {
+  const status = firstValue(row, ['status'])
+  const normalizedStatus = status.trim().toLowerCase()
+  if (['active', 'inactive', 'suspended', 'revoked'].includes(normalizedStatus)) {
+    return status
+  }
+
+  return 'Active'
+}
+
 function normalizeRecord(row, type) {
   if (type === 'banned') {
     return {
@@ -30,12 +40,20 @@ function normalizeRecord(row, type) {
 
   return {
     ...row,
+    reference: firstValue(row, ['ref_number', 'reference', 'registration_no']),
     plate: firstValue(row, ['plate', 'plate_no', 'plate_number']),
-    business: firstValue(row, ['business', 'business_name', 'bname']),
-    type: firstValue(row, ['type', 'vehicle_type', 'vtype']),
-    owner: firstValue(row, ['owner', 'applicant', 'name', 'operator', 'proprietor']),
-    expiry: firstValue(row, ['expiry', 'expiry_date', 'expiration_date', 'valid_until']),
-    status: firstValue(row, ['status']) || 'Active',
+    business: firstValue(row, ['business', 'business_name', 'bname', 'establishment_name']),
+    type: firstValue(row, ['establishment_type', 'type', 'vehicle_type', 'vtype']),
+    owner: firstValue(row, ['owner', 'applicant', 'name', 'name_of_owner', 'operator', 'proprietor']),
+    address: firstValue(row, ['address']),
+    telNo: firstValue(row, ['tel_no', 'telephone_no', 'contact', 'phone']),
+    dateIssued: firstValue(row, ['date_issued', 'approved_at', 'issued_at']),
+    stickerNo: firstValue(row, ['sticker_no', 'sticker_number']),
+    receiptDate: firstValue(row, ['receipt_date', 'or_date']),
+    receiptNo: firstValue(row, ['receipt_no', 'receipt_number', 'or_number']),
+    remarks: firstValue(row, ['remarks', 'status']),
+    expiry: firstValue(row, ['expiry', 'expiry_date', 'expiration_date', 'validity', 'valid', 'valid_until']),
+    status: statusValue(row),
   }
 }
 

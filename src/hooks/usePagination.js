@@ -7,9 +7,9 @@
 import { useState, useMemo } from "react";
 import { normalise } from "@/lib/utils";
 
-const PAGE_SIZE = 8;
+const DEFAULT_PAGE_SIZE = 10;
 
-export function usePagination(data = []) {
+export function usePagination(data = [], pageSize = DEFAULT_PAGE_SIZE) {
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
 
@@ -21,10 +21,10 @@ export function usePagination(data = []) {
     );
   }, [data, query]);
 
-  const pages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const pages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const safePage = Math.min(page, pages);
 
-  const rows = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const rows = filtered.slice((safePage - 1) * pageSize, safePage * pageSize);
 
   function handleSetQuery(q) {
     setQuery(q);
@@ -39,5 +39,6 @@ export function usePagination(data = []) {
     rows,
     total: filtered.length,
     pages,
+    pageSize,
   };
 }

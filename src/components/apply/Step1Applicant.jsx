@@ -26,6 +26,7 @@ export default function Step1Applicant({
   onChange,
   onNext,
   validatingGhp = false,
+  lockApplicationType = false,
 }) {
   const f = (id, type = "text") => ({
     id,
@@ -46,7 +47,13 @@ export default function Step1Applicant({
           <select
             id="applicationType"
             value={data.applicationType}
-            onChange={(e) => onChange("applicationType", e.target.value)}>
+            onChange={(e) => onChange("applicationType", e.target.value)}
+            disabled={lockApplicationType}
+            style={
+              lockApplicationType
+                ? { opacity: 0.75, cursor: "not-allowed" }
+                : undefined
+            }>
             {APPLICATION_TYPES.map((type) => (
               <option key={type}>{type}</option>
             ))}

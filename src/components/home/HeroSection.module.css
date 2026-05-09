@@ -81,6 +81,81 @@
 
 .actions { display: flex; gap: 14px; flex-wrap: wrap; }
 
+.statCards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 150px));
+  gap: 12px;
+  margin-top: 30px;
+  max-width: 520px;
+}
+
+.statCard {
+  position: relative;
+  overflow: hidden;
+  min-height: 92px;
+  padding: 14px 16px;
+  border: 1px solid rgba(255,255,255,.24);
+  border-radius: 8px;
+  background: rgba(255,255,255,.12);
+  box-shadow: 0 16px 40px rgba(0,0,0,.18);
+  backdrop-filter: blur(5px);
+}
+
+.statCard::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 4px;
+  background: rgba(255,255,255,.45);
+}
+
+.statCard:nth-child(1) {
+  border-color: rgba(56, 189, 248, .45);
+  background: linear-gradient(180deg, rgba(14, 116, 144, .34), rgba(8, 47, 73, .2));
+}
+
+.statCard:nth-child(1)::before {
+  background: #38bdf8;
+}
+
+.statCard:nth-child(2) {
+  border-color: rgba(74, 222, 128, .48);
+  background: linear-gradient(180deg, rgba(22, 163, 74, .34), rgba(20, 83, 45, .22));
+}
+
+.statCard:nth-child(2)::before {
+  background: #4ade80;
+}
+
+.statCard:nth-child(3) {
+  border-color: rgba(248, 113, 113, .5);
+  background: linear-gradient(180deg, rgba(190, 18, 60, .34), rgba(127, 29, 29, .22));
+}
+
+.statCard:nth-child(3)::before {
+  background: #f87171;
+}
+
+.statCard strong {
+  position: relative;
+  display: block;
+  color: var(--white);
+  font-size: 1.55rem;
+  font-weight: 850;
+  line-height: 1;
+  margin-bottom: 9px;
+}
+
+.statCard span {
+  position: relative;
+  display: block;
+  color: rgba(255,255,255,.84);
+  font-size: .76rem;
+  font-weight: 700;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
 .btnOutlineWhite {
   display: inline-flex;
   align-items: center;
@@ -121,6 +196,11 @@
   .copy > p {
     max-width: none;
   }
+
+  .statCards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    max-width: none;
+  }
 }
 
 @media (max-width: 560px) {
@@ -144,5 +224,13 @@
 
   .copy {
     padding: 30px 22px;
+  }
+
+  .statCards {
+    grid-template-columns: 1fr;
+  }
+
+  .statCard {
+    min-height: 74px;
   }
 }

@@ -22,6 +22,7 @@
  */
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useSearchParams } from "next/navigation";
 import { useToast } from "@/hooks/useToast";
 import { REQUIRED_DOCS } from "@/data/requiredDocs";
 import Toast from "@/components/ui/Toast";
@@ -68,6 +69,7 @@ const INITIAL_FORM = {
   btype: "",
   baddress: "",
   ghpCertNumber: "",
+  amendmentRef: "",
 };
 
 const DRAFT_STORAGE_KEY = "mtv-application-draft-v1";
@@ -86,7 +88,10 @@ const FIELD_LABELS = {
   vmake: "Vehicle Make",
   vmodel: "Vehicle Model",
   vyear: "Vehicle Year",
+  crNumber: "CR Number",
+  orNumber: "OR Number",
   capacity: "Load Capacity",
+  btype: "Business Type",
   meatEstablishment: "Meat Establishment",
   intendedRoute: "Intended Route",
 };
@@ -108,7 +113,10 @@ const REQUIRED_BY_STEP = {
     "vmake",
     "vmodel",
     "vyear",
+    "crNumber",
+    "orNumber",
     "capacity",
+    "btype",
     "meatEstablishment",
     "intendedRoute",
   ],
@@ -258,21 +266,89 @@ async function uploadFileInChunks({
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function ApplicationForm() {
+  const searchParams = useSearchParams();
+  const amendmentRef = searchParams.get("amend") || "";
+  const normalizedAmendmentRef = amendmentRef.trim().toUpperCase();
   const formRef = useRef(null);
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState(INITIAL_FORM);
   const [files, setFiles] = useState({});
   const [agree, setAgree] = useState(false);
   const [refNumber, setRefNumber] = useState("");
+  const [amendmentFolderId, setAmendmentFolderId] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [validatingGhp, setValidatingGhp] = useState(false);
+  const [loadingAmendment, setLoadingAmendment] = useState(false);
+  const [establishmentTypes, setEstablishmentTypes] = useState([]);
+  const [establishmentNames, setEstablishmentNames] = useState([]);
+  const [loadingEstablishmentTypes, setLoadingEstablishmentTypes] =
+    useState(false);
+  const [loadingEstablishmentNames, setLoadingEstablishmentNames] =
+    useState(false);
   const [optimisticMessage, setOptimisticMessage] = useState("");
   const [uploadProgress, setUploadProgress] = useState({}); // docId → 0-100
   const [draftReady, setDraftReady] = useState(false);
   const [, startTransition] = useTransition();
 
   const { toastState, showToast } = useToast();
+
+  useEffect(() => {
+    let cancelled = false;
+    const controller = new AbortController();
+
+    async function loadDropdownOptions() {
+      setLoadingEstablishmentTypes(true);
+      setLoadingEstablishmentNames(true);
+      try {
+        const [typeRes, nameRes] = await Promise.all([
+          fetch("/api/establishment-types", {
+            cache: "no-store",
+            signal: controller.signal,
+          }),
+          fetch("/api/establishment-names", {
+            cache: "no-store",
+            signal: controller.signal,
+          }),
+        ]);
+        const [typeJson, nameJson] = await Promise.all([
+          typeRes.json(),
+          nameRes.json(),
+        ]);
+        if (!typeRes.ok || !typeJson.success) {
+          throw new Error(
+            typeJson.error || "Unable to load establishment types.",
+          );
+        }
+        if (!nameRes.ok || !nameJson.success) {
+          throw new Error(
+            nameJson.error || "Unable to load establishment names.",
+          );
+        }
+        if (!cancelled) {
+          setEstablishmentTypes(typeJson.data || []);
+          setEstablishmentNames(nameJson.data || []);
+        }
+      } catch (error) {
+        if (!cancelled && error.name !== "AbortError") {
+          setEstablishmentTypes([]);
+          setEstablishmentNames([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoadingEstablishmentTypes(false);
+          setLoadingEstablishmentNames(false);
+        }
+      }
+    }
+
+    loadDropdownOptions();
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+  }, []);
 
   const submissionId = useMemo(
     () =>
@@ -282,16 +358,86 @@ export default function ApplicationForm() {
     [],
   );
 
-  // Load draft on mount
+  // Load draft on mount, or preload the existing application for amendments.
   useEffect(() => {
+    let cancelled = false;
     const draft = getSavedDraft();
+
+    async function loadAmendment() {
+      setLoadingAmendment(true);
+      const draftMatchesAmendment =
+        draft?.formData?.amendmentRef === normalizedAmendmentRef;
+
+      if (draftMatchesAmendment) {
+        setFormData({
+          ...draft.formData,
+          applicationType: "Amendment",
+          amendmentRef: normalizedAmendmentRef,
+        });
+        setStep(draft.step);
+        setAgree(draft.agree);
+      } else {
+        setFormData((prev) => ({
+          ...prev,
+          applicationType: "Amendment",
+          amendmentRef: normalizedAmendmentRef,
+        }));
+      }
+
+      try {
+        const res = await fetch(
+          `/api/applications/amendment?ref=${encodeURIComponent(normalizedAmendmentRef)}`,
+          { cache: "no-store" },
+        );
+        const json = await res.json();
+        if (!res.ok || !json.success) {
+          throw new Error(json.error || "Unable to load amendment details.");
+        }
+        if (cancelled) return;
+
+        const application = json.application || {};
+        setAmendmentFolderId(application.folderId || "");
+        setFormData((prev) => ({
+          ...prev,
+          ...application,
+          applicationType: "Amendment",
+          amendmentRef: normalizedAmendmentRef,
+        }));
+      } catch (error) {
+        if (!cancelled) {
+          showToast(error.message || "Unable to load amendment details.", true);
+        }
+      } finally {
+        if (!cancelled) {
+          setDraftReady(true);
+          setLoadingAmendment(false);
+        }
+      }
+    }
+
+    if (normalizedAmendmentRef) {
+      loadAmendment();
+      return () => {
+        cancelled = true;
+      };
+    }
+
     if (draft) {
-      setFormData(draft.formData);
+      setFormData({
+        ...draft.formData,
+        amendmentRef: "",
+      });
       setStep(draft.step);
       setAgree(draft.agree);
+    } else {
+      setFormData(INITIAL_FORM);
     }
     setDraftReady(true);
-  }, []);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [normalizedAmendmentRef, showToast]);
 
   // Auto-save draft after every relevant state change
   useEffect(() => {
@@ -343,7 +489,9 @@ export default function ApplicationForm() {
    * Returns true if valid, shows a toast and returns false if not.
    */
   function runDocumentValidation() {
-    const missingDocs = REQUIRED_DOCS.filter((d) => d.required && !files[d.id]);
+    const missingDocs = formData.amendmentRef
+      ? []
+      : REQUIRED_DOCS.filter((d) => d.required && !files[d.id]);
     if (missingDocs.length) {
       showToast(
         `Please upload all required documents: ${missingDocs.map((d) => d.name).join(", ")}.`,
@@ -438,19 +586,29 @@ export default function ApplicationForm() {
     setUploadProgress({});
 
     try {
-      // ── Phase 0: Generate sequential reference number ─────────────────────
-      startTransition(() =>
-        setOptimisticMessage("Generating your application reference number…"),
-      );
+      // ── Phase 0: Use the original ref for amendments, generate one for new applications.
+      const isAmendment = Boolean(formData.amendmentRef);
+      let generatedRefNumber = formData.amendmentRef;
+      let folderId = amendmentFolderId;
 
-      const refRes = await fetch("/api/generate-ref-number", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
-      const refJson = await refRes.json();
-      if (!refJson.success)
-        throw new Error(refJson.error || "Failed to generate reference number");
-      const generatedRefNumber = refJson.refNumber; // e.g. "MTV-2026-000001"
+      if (isAmendment) {
+        startTransition(() =>
+          setOptimisticMessage("Preparing your application amendment…"),
+        );
+      } else {
+        startTransition(() =>
+          setOptimisticMessage("Generating your application reference number…"),
+        );
+
+        const refRes = await fetch("/api/generate-ref-number", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+        });
+        const refJson = await refRes.json();
+        if (!refJson.success)
+          throw new Error(refJson.error || "Failed to generate reference number");
+        generatedRefNumber = refJson.refNumber; // e.g. "MTV-2026-000001"
+      }
 
       // ── Phase 1: Create Drive folder (named with ref number only) ─────────
       // Folder name = ref number only, e.g. "MTV-2026-000001"
@@ -458,15 +616,17 @@ export default function ApplicationForm() {
         setOptimisticMessage("Creating your application folder…"),
       );
 
-      const folderRes = await fetch("/api/drive/create-folder", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ folderName: generatedRefNumber }),
-      });
-      const folderJson = await folderRes.json();
-      if (!folderJson.success)
-        throw new Error(folderJson.error || "Failed to create Drive folder");
-      const folderId = folderJson.folderId;
+      if (!folderId) {
+        const folderRes = await fetch("/api/drive/create-folder", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ folderName: generatedRefNumber }),
+        });
+        const folderJson = await folderRes.json();
+        if (!folderJson.success)
+          throw new Error(folderJson.error || "Failed to create Drive folder");
+        folderId = folderJson.folderId;
+      }
 
       // ── Phase 2: Upload each file in chunks (proxied through our API) ─────
       // File name pattern: <refNumber>_<docId>_<originalFileName>
@@ -546,7 +706,13 @@ export default function ApplicationForm() {
   }
 
   if (submitted)
-    return <SuccessView refNumber={refNumber} onReset={handleReset} />;
+    return (
+      <SuccessView
+        refNumber={refNumber}
+        onReset={handleReset}
+        isAmendment={Boolean(formData.amendmentRef)}
+      />
+    );
 
   // ─── Weighted upload progress ───────────────────────────────────────────────
   const docEntries = Object.entries(files);
@@ -566,6 +732,18 @@ export default function ApplicationForm() {
   return (
     <>
       <div className={styles.container} ref={formRef}>
+        {formData.amendmentRef ? (
+          <div className={styles.optimistic} style={{ marginBottom: 18 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <strong>Amendment for {formData.amendmentRef}</strong>
+              <p>
+                {loadingAmendment
+                  ? "Loading the existing application details..."
+                  : "Update the information and upload only the corrected documents requested by NMIS."}
+              </p>
+            </div>
+          </div>
+        ) : null}
         <FormProgress currentStep={step} />
 
         {optimisticMessage && (
@@ -595,6 +773,7 @@ export default function ApplicationForm() {
             onChange={updateField}
             onNext={() => goToStep(2, true)}
             validatingGhp={validatingGhp}
+            lockApplicationType={Boolean(formData.amendmentRef)}
           />
         )}
         {step === 2 && (
@@ -603,6 +782,10 @@ export default function ApplicationForm() {
             onChange={updateField}
             onBack={() => goToStep(1)}
             onNext={() => goToStep(3, true)}
+            establishmentTypes={establishmentTypes}
+            establishmentNames={establishmentNames}
+            loadingEstablishmentTypes={loadingEstablishmentTypes}
+            loadingEstablishmentNames={loadingEstablishmentNames}
           />
         )}
         {step === 3 && (
@@ -614,6 +797,7 @@ export default function ApplicationForm() {
             onBack={() => goToStep(2)}
             onNext={() => goToStep(4, true)}
             showToast={showToast}
+            isAmendment={Boolean(formData.amendmentRef)}
           />
         )}
         {step === 4 && (
@@ -623,6 +807,7 @@ export default function ApplicationForm() {
             submitting={submitting}
             onBack={() => goToStep(3)}
             onSubmit={handleSubmit}
+            isAmendment={Boolean(formData.amendmentRef)}
           />
         )}
       </div>

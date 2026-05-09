@@ -1,4 +1,6 @@
 import styles from "./guidelines.module.css";
+import ZoomableFigure from "./ZoomableFigure";
+import { getReferenceIssuances } from "@/lib/googleSheets";
 
 export const metadata = {
   title: "MTV Guidelines - MTV Portal",
@@ -73,72 +75,7 @@ const VEHICLE_PHOTOS = [
   },
 ];
 
-const MEMORANDUM_GROUPS = [
-  {
-    title: "Memorandum Circular",
-    items: [
-      {
-        number: "Memorandum Circular No. 06-2024-19",
-        detail: "Numbering of Registered MTV",
-        url: "https://drive.google.com/file/d/1RMYkJZqYkWuZFVqGBCWU4_xi1t9a6Qxv/view",
-      },
-      {
-        number: "Memorandum Circular No. 10-2020-021",
-        detail:
-          "Granting of Six (6) months transition period to conform with the use of chiller/reefer vans to be registered as NMIS Meat Transport Vehicle (MTV) effective up to March 2021",
-      },
-      {
-        number: "Memorandum Circular No. 02-2017-002",
-        detail: "Accreditation / Registration of Meat Transport Vehicle (MTV)",
-      },
-      {
-        number: "Memorandum Circular No. 12-2015-016",
-        detail:
-          'Implementation of "No meat transport vehicle (MTV) accreditation" No Loading/Unloading Transport Policy',
-      },
-      {
-        number: "1987 Memorandum Circular 001-87",
-        detail:
-          "Guidelines on the Use of Meat Inspection Certificates and Accredited Meat Vans",
-        url: "https://nmis.gov.ph/images/pdf/mc-1987-001-87.pdf",
-      },
-    ],
-  },
-  {
-    title: "Memorandum",
-    items: [
-      {
-        number: "Memorandum No. 12-03-2015-16",
-        detail: "Painting of MTV Accreditation Number",
-      },
-      {
-        number: "Memorandum No. 0941",
-        detail:
-          "Adoption of unified certificate of accreditation of meat transport vehicle (MTV)",
-      },
-    ],
-  },
-  {
-    title: "Memorandum Order",
-    items: [
-      {
-        number: "Memorandum Order No. 05-2025-260",
-        detail:
-          "Revised Guidelines on the Numbering System for Meat Transport Vehicle (MTV) Registration",
-      },
-      {
-        number: "Memorandum Order No. CO-07-2024-493",
-        detail:
-          "Reiterating the Implementation on Registering Meat Transport Vehicle for Meat Processed Products",
-      },
-      {
-        number: "Memorandum Order No. CO-07-2024-454",
-        detail:
-          "Updated Policy on Signatory for NMIS MTV Certificate of Registration and Delineation of Responsibility for the Issuance of NMIS MTV Certificate of Registration (MTV COR)",
-      },
-    ],
-  },
-];
+export const dynamic = "force-dynamic";
 
 function SectionHeading({ eyebrow, title, text }) {
   return (
@@ -150,7 +87,67 @@ function SectionHeading({ eyebrow, title, text }) {
   );
 }
 
-export default function GuidelinesPage() {
+function firstValue(row, keys) {
+  for (const key of keys) {
+    const value = row[key];
+    if (value) return value;
+  }
+
+  return "";
+}
+
+function groupReferenceIssuances(rows) {
+  const groups = new Map();
+
+  rows.forEach((row) => {
+    const groupTitle =
+      firstValue(row, ["group", "category", "type", "issuance_type"]) ||
+      "Reference Issuances";
+    const number = firstValue(row, [
+      "number",
+      "memorandum_number",
+      "issuance_number",
+      "reference",
+      "title",
+    ]);
+    const detail = firstValue(row, [
+      "detail",
+      "details",
+      "description",
+      "subject",
+      "particulars",
+    ]);
+    const url = firstValue(row, ["url", "link", "file_url", "drive_url"]);
+
+    if (!number && !detail) return;
+
+    if (!groups.has(groupTitle)) {
+      groups.set(groupTitle, { title: groupTitle, items: [] });
+    }
+
+    groups.get(groupTitle).items.push({
+      number: number || detail,
+      detail,
+      url,
+    });
+  });
+
+  return Array.from(groups.values()).filter((group) => group.items.length);
+}
+
+async function getMemoGroups() {
+  try {
+    const rows = await getReferenceIssuances();
+    return groupReferenceIssuances(rows);
+  } catch (error) {
+    console.error("Reference issuances fetch error:", error);
+    return [];
+  }
+}
+
+export default async function GuidelinesPage() {
+  const memorandumGroups = await getMemoGroups();
+
   return (
     <>
       <div className="page-hero">
@@ -223,12 +220,11 @@ export default function GuidelinesPage() {
               text="Registered Meat Transport Vehicles must display the assigned number using the prescribed format for monitoring and identification."
             />
             <div className={styles.complianceLayout}>
-              <figure className={styles.featureImage}>
-                <img
-                  src="/images/vehicle-photos/mtv-format.png"
-                  alt="Example of MTV registration number format"
-                />
-              </figure>
+              <ZoomableFigure
+                figureClassName={styles.featureImage}
+                src="/images/vehicle-photos/mtv-format.png"
+                alt="Example of MTV registration number format"
+              />
               <div className={styles.compliancePanel}>
                 <div className={styles.formatBlock}>
                   <span>Prescribed format</span>
@@ -275,20 +271,18 @@ export default function GuidelinesPage() {
               text="Industrial plastic curtain or PVC strip plastic curtain must properly overlap and be placed near the rear opening, with curtain-to-floor distance kept close to 1 cm."
             />
             <div className={styles.mediaGridTwo}>
-              <figure className={styles.photoFigure}>
-                <img
-                  src="/images/curtain-photos/curtain-1.png"
-                  alt="PVC curtain overlapping detail"
-                />
+              <ZoomableFigure
+                figureClassName={styles.photoFigure}
+                src="/images/curtain-photos/curtain-1.png"
+                alt="PVC curtain overlapping detail">
                 <figcaption>PVC curtain overlapping detail</figcaption>
-              </figure>
-              <figure className={styles.photoFigure}>
-                <img
-                  src="/images/curtain-photos/curtain-2.png"
-                  alt="Rear curtain placement"
-                />
+              </ZoomableFigure>
+              <ZoomableFigure
+                figureClassName={styles.photoFigure}
+                src="/images/curtain-photos/curtain-2.png"
+                alt="Rear curtain placement">
                 <figcaption>Rear curtain placement</figcaption>
-              </figure>
+              </ZoomableFigure>
             </div>
           </section>
 
@@ -300,13 +294,16 @@ export default function GuidelinesPage() {
             />
             <div className={styles.photoGrid}>
               {VEHICLE_PHOTOS.map((photo) => (
-                <figure key={photo.title} className={styles.photoFigure}>
-                  <img src={photo.src} alt={photo.title} />
+                <ZoomableFigure
+                  key={photo.title}
+                  figureClassName={styles.photoFigure}
+                  src={photo.src}
+                  alt={photo.title}>
                   <figcaption>
                     <strong>{photo.title}</strong>
                     <span>{photo.note}</span>
                   </figcaption>
-                </figure>
+                </ZoomableFigure>
               ))}
             </div>
           </section>
@@ -317,29 +314,35 @@ export default function GuidelinesPage() {
               title="Policy references and related memoranda"
               text="Open each group to review the issuances supporting MTV registration, numbering, marking, and certificate policies."
             />
-            <div className={styles.memoGroups}>
-              {MEMORANDUM_GROUPS.map((group) => (
-                <details key={group.title} className={styles.memoGroup}>
-                  <summary>{group.title}</summary>
-                  <div className={styles.memoItems}>
-                    {group.items.map((item) => (
-                      <article key={item.number} className={styles.memoItem}>
-                        <h3>
-                          {item.url ? (
-                            <a href={item.url} target="_blank" rel="noreferrer">
-                              {item.number}
-                            </a>
-                          ) : (
-                            item.number
-                          )}
-                        </h3>
-                        <p>{item.detail}</p>
-                      </article>
-                    ))}
-                  </div>
-                </details>
-              ))}
-            </div>
+            {memorandumGroups.length ? (
+              <div className={styles.memoGroups}>
+                {memorandumGroups.map((group) => (
+                  <details key={group.title} className={styles.memoGroup}>
+                    <summary>{group.title}</summary>
+                    <div className={styles.memoItems}>
+                      {group.items.map((item) => (
+                        <article key={item.number} className={styles.memoItem}>
+                          <h3>
+                            {item.url ? (
+                              <a href={item.url} target="_blank" rel="noreferrer">
+                                {item.number}
+                              </a>
+                            ) : (
+                              item.number
+                            )}
+                          </h3>
+                          <p>{item.detail}</p>
+                        </article>
+                      ))}
+                    </div>
+                  </details>
+                ))}
+              </div>
+            ) : (
+              <p className={styles.emptyState}>
+                No reference issuances are available from the Google Sheet.
+              </p>
+            )}
           </section>
         </div>
       </main>

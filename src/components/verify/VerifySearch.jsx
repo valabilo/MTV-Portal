@@ -28,6 +28,7 @@ export default function VerifySearch({ data, showToast, initialQ = "" }) {
 
     const found = data.find(
       (r) =>
+        normalise(r.reference || r.registration_no || "").includes(val) ||
         normalise(r.plate || r.plate_no || r.plate_number || "").includes(val) ||
         normalise(r.business || r.business_name || "").includes(val),
     );
@@ -74,11 +75,19 @@ export default function VerifySearch({ data, showToast, initialQ = "" }) {
           <div className={styles.resultBody}>
             <div className={styles.resultGrid}>
               {[
+                ["Registration No.", result.reference || result.registration_no],
                 ["Plate Number", result.plate || result.plate_no],
                 ["Business Name", result.business || result.business_name],
                 ["Owner", result.owner],
-                ["Vehicle Type", result.type || result.vehicle_type],
+                ["Address", result.address],
+                ["Tel No.", result.telNo || result.tel_no],
+                ["Date Issued", result.dateIssued || result.date_issued],
+                ["Sticker No.", result.stickerNo || result.sticker_no],
                 ["Expiry Date", result.expiry || result.expiry_date],
+                ["Receipt Date", result.receiptDate || result.receipt_date],
+                ["Receipt No.", result.receiptNo || result.receipt_no],
+                ["Valid", result.validity || result.valid],
+                ["Remarks", result.remarks],
                 ["Status", <StatusTag key="s" status={stat} />],
               ].map(([label, val]) => (
                 <div key={label} className={styles.resultItem}>

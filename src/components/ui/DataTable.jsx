@@ -1,4 +1,4 @@
-'use client'
+"use client";
 /**
  * components/ui/DataTable.jsx
  *
@@ -11,13 +11,54 @@
  *   data      {object[]}       Full dataset (unfiltered)
  *   loading   {boolean}
  *   emptyText {string}         Message when no rows match
+ *   pageSizeOptions {number[]} Options for rows per page (default: [10, 20, 30])
  */
 
-import { usePagination } from '@/hooks/usePagination'
-import styles from './DataTable.module.css'
+import { useState } from "react";
+import { usePagination } from "@/hooks/usePagination";
+import styles from "./DataTable.module.css";
 
-export default function DataTable({ title, columns, data, loading, emptyText = 'No records found.' }) {
-  const { query, setQuery, page, setPage, rows, total, pages } = usePagination(data)
+export default function DataTable({
+  title,
+  columns,
+  data,
+  loading,
+  emptyText = "No records found.",
+  pageSizeOptions = [10, 20, 30],
+}) {
+  const [pageSize, setPageSize] = useState(pageSizeOptions[0]);
+  const { query, setQuery, page, setPage, rows, total, pages } = usePagination(
+    data,
+    pageSize,
+  );
+
+  const handlePageSizeChange = (newSize) => {
+    setPageSize(newSize);
+    setPage(1);
+  };
+
+  const getPageNumbers = () => {
+    const pageNumbers = [];
+    const maxVisible = 5;
+    const half = Math.floor(maxVisible / 2);
+
+    let start = Math.max(1, page - half);
+    let end = Math.min(pages, start + maxVisible - 1);
+
+    if (end - start + 1 < maxVisible) {
+      start = Math.max(1, end - maxVisible + 1);
+    }
+
+    for (let i = start; i <= end; i++) {
+      pageNumbers.push(i);
+    }
+
+    return {
+      pageNumbers,
+      showStartEllipsis: start > 1,
+      showEndEllipsis: end < pages,
+    };
+  };
 
   return (
     <div className={styles.wrap}>
@@ -28,7 +69,7 @@ export default function DataTable({ title, columns, data, loading, emptyText = '
           <input
             type="text"
             value={query}
-            onChange={e => setQuery(e.target.value)}
+            onChange={(e) => setQuery(e.target.value)}
             placeholder="Filter records..."
             aria-label="Filter table records"
           />
@@ -40,8 +81,12 @@ export default function DataTable({ title, columns, data, loading, emptyText = '
         <table>
           <thead>
             <tr>
-              {columns.map(col => (
-                <th key={col.key}>{col.label}</th>
+              {columns.map((col) => (
+                <th
+                  key={col.key}
+                  className={col.className ? styles[col.className] : undefined}>
+                  {col.label}
+                </th>
               ))}
             </tr>
           </thead>
@@ -61,9 +106,15 @@ export default function DataTable({ title, columns, data, loading, emptyText = '
             ) : (
               rows.map((row, i) => (
                 <tr key={i}>
-                  {columns.map(col => (
-                    <td key={col.key}>
-                      {col.render ? col.render(row[col.key], row) : row[col.key]}
+                  {columns.map((col) => (
+                    <td
+                      key={col.key}
+                      className={
+                        col.className ? styles[col.className] : undefined
+                      }>
+                      {col.render
+                        ? col.render(row[col.key], row)
+                        : row[col.key]}
                     </td>
                   ))}
                 </tr>
@@ -76,25 +127,98 @@ export default function DataTable({ title, columns, data, loading, emptyText = '
       {/* Pagination */}
       {!loading && total > 0 && (
         <div className={styles.pagination}>
-          <span className={styles.paginationInfo}>
-            Showing {Math.min(total, (page - 1) * 8 + rows.length)} of {total} records
-          </span>
+          <div className={styles.paginationLeft}>
+            <span className={styles.paginationInfo}>
+              Showing {Math.min(total, (page - 1) * pageSize + rows.length)} of{" "}
+              {total} records
+            </span>
+            <div className={styles.rowsPerPage}>
+              <label htmlFor="rowsPerPage">Rows per page:</label>
+              <select
+                id="rowsPerPage"
+                value={pageSize}
+                onChange={(e) => handlePageSizeChange(Number(e.target.value))}>
+                {pageSizeOptions.map((size) => (
+                  <option key={size} value={size}>
+                    {size}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
           {pages > 1 && (
             <div className={styles.paginationBtns}>
-              {Array.from({ length: pages }, (_, i) => i + 1).map(p => (
-                <button
-                  key={p}
-                  onClick={() => setPage(p)}
-                  className={`${styles.pageBtn} ${p === page ? styles.pageBtnActive : ''}`}
-                  aria-current={p === page ? 'page' : undefined}
-                >
-                  {p}
-                </button>
-              ))}
+              <button
+                onClick={() => setPage(1)}
+                disabled={page === 1}
+                className={styles.pageBtn}
+                aria-label="First page">
+                &laquo;
+              </button>
+              <button
+                onClick={() => setPage(page - 1)}
+                disabled={page === 1}
+                className={styles.pageBtn}
+                aria-label="Previous page">
+                &lsaquo;
+              </button>
+              {(() => {
+                const { pageNumbers, showStartEllipsis, showEndEllipsis } =
+                  getPageNumbers();
+                return (
+                  <>
+                    {showStartEllipsis && (
+                      <>
+                        <button
+                          onClick={() => setPage(1)}
+                          className={styles.pageBtn}
+                          aria-label="Page 1">
+                          1
+                        </button>
+                        <span className={styles.ellipsis}>...</span>
+                      </>
+                    )}
+                    {pageNumbers.map((p) => (
+                      <button
+                        key={p}
+                        onClick={() => setPage(p)}
+                        className={`${styles.pageBtn} ${p === page ? styles.pageBtnActive : ""}`}
+                        aria-current={p === page ? "page" : undefined}>
+                        {p}
+                      </button>
+                    ))}
+                    {showEndEllipsis && (
+                      <>
+                        <span className={styles.ellipsis}>...</span>
+                        <button
+                          onClick={() => setPage(pages)}
+                          className={styles.pageBtn}
+                          aria-label={`Page ${pages}`}>
+                          {pages}
+                        </button>
+                      </>
+                    )}
+                  </>
+                );
+              })()}
+              <button
+                onClick={() => setPage(page + 1)}
+                disabled={page === pages}
+                className={styles.pageBtn}
+                aria-label="Next page">
+                &rsaquo;
+              </button>
+              <button
+                onClick={() => setPage(pages)}
+                disabled={page === pages}
+                className={styles.pageBtn}
+                aria-label="Last page">
+                &raquo;
+              </button>
             </div>
           )}
         </div>
       )}
     </div>
-  )
+  );
 }
